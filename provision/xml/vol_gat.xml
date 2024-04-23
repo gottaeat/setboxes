@@ -1,0 +1,12 @@
+<volume>
+    <name>gat.qcow2</name>
+    <capacity unit="M">10752</capacity>
+    <target>
+        <path>/mnt/mss/stuff/techy-bits/pools/setboxes/gat.qcow2</path>
+        <format type="qcow2" />
+    </target>
+    <backingStore>
+        <path>/mnt/mss/stuff/techy-bits/pools/setboxes/loggedin.qcow2</path>
+        <format type="qcow2" />
+    </backingStore>
+</volume>

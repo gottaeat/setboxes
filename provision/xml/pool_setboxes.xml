@@ -1,0 +1,6 @@
+<pool type="dir">
+    <name>setboxes</name>
+    <target>
+        <path>/mnt/mss/stuff/techy-bits/pools/setboxes</path>
+    </target>
+</pool>
