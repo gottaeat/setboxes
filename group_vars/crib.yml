@@ -1,0 +1,33 @@
+---
+remote_user: mss
+ansible_user: mss
+ansible_port: 3131
+mss_groups_base:
+  - adm
+  - audio
+  - disk
+  - floppy
+  - ftp
+  - games
+  - http
+  - input
+  - kmem
+  - kvm
+  - log
+  - lp
+  - mail
+  - mss
+  - optical
+  - proc
+  - rfkill
+  - scanner
+  - smmsp
+  - storage
+  - sys
+  - systemd-journal
+  - tty
+  - users
+  - utmp
+  - uucp
+  - video
+  - wheel
