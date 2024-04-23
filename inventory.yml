@@ -1,0 +1,4 @@
+crib:
+  hosts:
+    desk1:
+      ansible_host: gat
