@@ -12,7 +12,7 @@ TMPDIR="$(mktemp -d ./my_temp_dir_XXXXXX)"
 cd "${TMPDIR}"
 
 # - - variables - - #
-POOLDIR="/mnt/mss/stuff/techy-bits/pools/gat"
+POOLDIR="/mnt/mss/stuff/techy-bits/pools/setboxes"
 MOUNT="${PWD}/nbdmount"
 NBDDEV="/dev/nbd0"
 IMGNAME="loggedin.qcow2"
