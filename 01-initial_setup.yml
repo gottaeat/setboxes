@@ -1,0 +1,79 @@
+---
+- name: set accounts and configure sshd before user handoff
+  hosts: crib
+  vars:
+    - ansible_user: root
+    - ansible_password: loggedin
+    - ansible_port: 22
+  vars_files:
+    -  files/pass.yml
+  tasks:
+    - name: set root password
+      ansible.builtin.user:
+        name: root
+        update_password: always
+        password: "{{ root_passwd }}"
+
+    - name: configure user mss
+      block:
+        - name: add mss group
+          ansible.builtin.group:
+            name: mss
+            gid: 1001
+            state: present
+
+        - name: add mss user
+          ansible.builtin.user:
+            name: mss
+            uid: 1001
+            password: "{{ user_passwd }}"
+            password_lock: false
+            group: mss
+            groups: "{{ mss_groups_base }}"
+            append: false
+            create_home: true
+            home: /home/mss
+            skeleton: /dev/null
+            expires: -1
+            comment: ya boi
+            shell: /bin/bash
+            state: present
+
+        - name: set authorized_keys for mss user
+          ansible.posix.authorized_key:
+            user: mss
+            state: present
+            key: "{{ lookup('url', 'https://github.com/gottaeat.keys', split_lines=False) }}"
+
+    - name: allow group mss to run rsync as root w/o a password
+      community.general.sudoers:
+        name: rsync
+        state: present
+        group: mss
+        nopassword: true
+        commands: /usr/bin/rsync
+
+    - name: configure sshd
+      block:
+        - name: copy sshd configuration
+          ansible.builtin.copy:
+            src: ./dir/etc/ssh/sshd_config
+            dest: /etc/ssh
+            owner: root
+            group: root
+            mode: '0644'
+          notify: restart sshd
+
+        - name: copy banner
+          ansible.builtin.copy:
+            src: "./files/banners/{{ mss_hostname }}"
+            dest: /etc/ssh
+            owner: root
+            group: root
+            mode: '0644'
+
+  handlers:
+    - name: restart sshd
+      ansible.builtin.systemd_service:
+        name: sshd
+        state: restarted
