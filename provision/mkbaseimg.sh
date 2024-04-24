@@ -106,6 +106,12 @@ systemctl enable systemd-networkd
 systemctl enable pacman-init.service
 EOF
 
+# - - allow ssh as root w/ passwd - - #
+sed -i \
+    -e 's/#PermitRootLogin .*/PermitRootLogin yes/' \
+    -e 's/#PasswordAuthentication .*/PasswordAuthentication yes/' \
+    "${MOUNT}"/etc/ssh/sshd_config
+
 # - - setup networking - - #
 cat <<EOF >"${MOUNT}/etc/systemd/network/80-dhcp.network"
 [Match]
@@ -118,8 +124,11 @@ EOF
 # - - grub - - #
 cp -rfv "${MOUNT}/boot/"{initramfs-linux-zen-fallback.img,initramfs-linux-zen.img}
 
-sed -i 's/^GRUB_TIMEOUT=.*$/GRUB_TIMEOUT=1/' "${MOUNT}/etc/default/grub"
-sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"net.ifnames=0\"/' "${MOUNT}/etc/default/grub"
+sed -i \
+    -e 's/^GRUB_TIMEOUT=.*$/GRUB_TIMEOUT=1/' \
+    -e 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"net.ifnames=0\"/' \
+    "${MOUNT}/etc/default/grub"
+
 arch-chroot "${MOUNT}" /usr/bin/grub-install --target=x86_64-efi --efi-directory=/boot --removable
 arch-chroot "${MOUNT}" /usr/bin/grub-mkconfig -o /boot/grub/grub.cfg
 
