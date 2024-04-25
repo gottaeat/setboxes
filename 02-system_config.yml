@@ -225,9 +225,40 @@
         state: restarted
         enabled: true
 
-- name: systemd-networkd handling
+- name: configure networking
   hosts: crib
   become: yes
+  pre_tasks:
+    - name: copy over networkmanager configuration
+      copy:
+        src: ./dir/etc/NetworkManager/conf.d/
+        dest: /etc/NetworkManager/conf.d/
+        owner: root
+        group: root
+        mode: '0644'
+      register: nm_config_copy
+
+    - name: enable networkmanager
+      systemd_service:
+        name: NetworkManager
+        state: "{{ 'reloaded' if nm_config_copy.changed else 'started' }}"
+        enabled: true
+
+    - name: get rid of mkbaseimg.sh networking
+      file:
+        path: "/etc/systemd/network/80-dhcp.network"
+        state: absent
+      notify: restart networking components
+
+  handlers:
+    - name: restart networking components
+      systemd_service:
+        name: "{{ item }}"
+        state: restarted
+        enabled: true
+      with_items:
+        - systemd-networkd
+        - NetworkManager
   roles:
     - role: systemd-networkd
       vars:
@@ -242,35 +273,3 @@
         systemd_networkd_enable_resolved: false
         systemd_networkd_symlink_resolv_conf: false
         systemd_networkd_manage_nsswitch_config: false
-
-#- name: configure networkmanager
-#  hosts: crib
-#  become: yes
-#  tasks:
-#    - name: copy over config files
-#      copy:
-#        src: ./dir/etc/NetworkManager/conf.d/
-#        dest: /etc/NetworkManager/conf.d/
-#        owner: root
-#        group: root
-#        mode: '0644'
-#      notify: reload 
-#
-#    - name: enable networkmanager
-#      systemd_service:
-#        name: NetworkManager
-#        state: "{{ 'reloaded' if nm_config.changed else 'started' }}"
-#        enabled: true
-#
-#    - name: get rid of mkbaseimg.sh networking
-#      file:
-#        path: "/etc/systemd/network/80-dhcp.network"
-#        state: absent
-#      register: mkbaseimg_networking_deleted
-#
-#    - name: reload systemd-networkd before handoff
-#      systemd_service:
-#        name: systemd-networkd
-#        state: reloaded
-#        enabled: true
-#      when: mkbaseimg_networking_deleted.changed
