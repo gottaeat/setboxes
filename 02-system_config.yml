@@ -1,0 +1,276 @@
+- name: libc configuration
+  hosts: crib
+  become: yes
+  tasks:
+    - name: set hostname
+      hostname:
+        name: "{{ mss_hostname }}"
+        use: systemd
+
+    - name: set /etc/hosts
+      copy:
+        content: |
+          127.0.0.1 localhost.localdomain localhost
+          127.0.1.1 {{ mss_hostname }} {{ mss_hostname }}
+        dest: "/etc/hosts"
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: set locale
+      block:
+        - name: set locale.gen
+          community.general.locale_gen:
+           name: en_US.UTF-8
+           state: present
+
+        - name: set locale.conf
+          copy:
+            content: |
+              LANG=en_US.UTF-8
+            dest: "/etc/locale.conf"
+            owner: root
+            group: root
+            mode: '0644'
+
+    - name: set timezone
+      community.general.timezone:
+        name: Europe/Istanbul
+
+    - name: set mountpoints
+      block:
+        - name: create mountpoints
+          file:
+            path: "/mnt/mss/{{ item }}"
+            owner: root
+            group: root
+            state: directory
+            recurse: true
+          with_items:
+            - archive
+            - externalstuff
+            - iso
+            - stuff
+            - usb
+
+        - name: set fstab
+          copy:
+            content: |
+              /dev/arch/rootfs / ext4 defaults,noatime 0 1
+              /dev/arch/stuff /mnt/mss/stuff ext4 rw,relatime,noatime,data=ordered 0 2
+              /mnt/mss/stuff/techy-bits/home /home/mss auto defaults,nofail,nobootwait,bind 0 0
+              /mnt/mss/stuff/techy-bits/swapfile none swap sw 0 0
+              {{ mss_fstab_extra }}
+            dest: "/etc/fstab"
+            owner: root
+            group: root
+            mode: '0644'
+
+- name: pacman and mkinitcpio configuration
+  hosts: crib
+  become: yes
+  tasks:
+    - name: copy over vconsole.conf # change should trigger a initramfs rebuild
+      copy:
+        src: ./dir/etc/vconsole.conf
+        dest: /etc
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: copy over the pacman config files
+      copy:
+        src: "./dir/etc/{{ item }}"
+        dest: /etc
+        owner: root
+        group: root
+        mode: '0644'
+      with_items:
+        - pacman.conf
+        - makepkg.conf
+        - mkinitcpio.conf
+
+    - name: set pacman mirrors
+      copy:
+        content: |
+          Server = https://geo.mirror.pkgbuild.com/$repo/os/$arch
+          Server = https://mirror.rackspace.com/archlinux/$repo/os/$arch
+          Server = https://mirror.leaseweb.net/archlinux/$repo/os/$arch
+        dest: /etc/pacman.d/mirrorlist
+        owner: root
+        group: root
+        mode: '0644'
+
+- name: install packages
+  hosts: crib
+  become: yes
+  vars_files:
+    - files/pkglist/main.yml
+  tasks:
+    - name: initial update and upgrade
+      community.general.pacman:
+        update_cache: true
+        upgrade: true
+      notify: cleanup pacman
+
+    - name: install packages
+      community.general.pacman:
+        name: "{{ (mss_main_pkgs_base + mss_main_pkgs_extra) }}"
+        update_cache: true
+        state: present
+        extra_args: "--ask 4"
+      notify: cleanup pacman
+
+  handlers:
+    - name: cleanup pacman
+      shell: |
+        pacman -Scc --noconfirm && \
+        pacman -Qtdq | pacman -Rns - --noconfirm && \
+        pacman -Qqd | pacman -Rsu - --noconfirm
+      ignore_errors: true
+        
+
+- name: sysctl configuration
+  hosts: crib
+  become: yes
+  tasks:
+    - name: set ipv4
+      ansible.posix.sysctl:
+        name: "{{ item['name'] }}"
+        value: "{{ item['value'] }}"
+        sysctl_file: /etc/sysctl.d/01-ipv4.conf
+        sysctl_set: yes
+        reload: yes
+        state: present
+      with_items:
+        - { name: "net.ipv4.icmp_echo_ignore_broadcasts", value: 1 }
+        - { name: "net.ipv4.conf.all.accept_source_route", value: 0 }
+        - { name: "net.ipv4.conf.default.accept_source_route", value: 0 }
+        - { name: "net.ipv4.tcp_syncookies", value: 1 }
+        - { name: "net.ipv4.conf.default.accept_redirects", value: 0 }
+        - { name: "net.ipv4.conf.all.send_redirects", value: 0 }
+        - { name: "net.ipv4.conf.default.send_redirects", value: 0 }
+        - { name: "net.ipv4.conf.all.rp_filter", value: 1 }
+        - { name: "net.ipv4.conf.default.rp_filter", value: 1 }
+        - { name: "net.ipv4.conf.all.log_martians", value: 1 }
+        - { name: "net.ipv4.conf.default.log_martians", value: 1 }
+        - { name: "net.ipv4.ip_dynaddr", value: 2 }
+        - { name: "net.ipv4.tcp_ecn", value: 0 }
+        - { name: "net.ipv4.ip_forward", value: 1 }
+
+    - name: set ipv6
+      ansible.posix.sysctl:
+        name: "{{ item['name'] }}"
+        value: "{{ item['value'] }}"
+        sysctl_file: /etc/sysctl.d/02-ipv6.conf
+        sysctl_set: yes
+        reload: yes
+        state: present
+      with_items:
+        - { name: "net.ipv6.conf.all.disable_ipv6", value: 1 }
+        - { name: "net.ipv6.conf.default.disable_ipv6", value: 1 }
+
+    - name: enable sysrq
+      ansible.posix.sysctl:
+        name: kernel.sysrq
+        value: '1'
+        sysctl_file: /usr/lib/sysctl.d/50-default.conf
+        reload: false
+
+- name: modprobe configuration
+  hosts: crib
+  become: yes
+  tasks:
+    - name: blacklist ipv6
+      community.general.kernel_blacklist:
+        name: ipv6
+        state: present
+
+- name: udev configuration
+  hosts: crib
+  become: yes
+  tasks:
+    - name: copy over the rules
+      copy:
+        src: ./dir/etc/udev/rules.d/
+        dest: /etc/udev/rules.d
+        owner: root
+        group: root
+        mode: '0644'
+      notify: reload udev rules
+
+  handlers:
+    - name: reload udev rules
+      shell: |
+        udevadm control --reload-rules && \
+        udevadm trigger
+
+- name: configure systemd (systemd itself, not its components or other services)
+  hosts: crib
+  become: yes
+  tasks:
+    - name: copy over logind config
+      copy:
+        src: ./dir/etc/systemd/logind.conf
+        dest: /etc
+        owner: root
+        group: root
+        mode: '0644'
+      notify: restart elogind
+
+  handlers:
+    - name: restart elogind
+      systemd_service:
+        name: systemd-logind
+        state: restarted
+        enabled: true
+
+- name: systemd-networkd handling
+  hosts: crib
+  become: yes
+  roles:
+    - role: systemd-networkd
+      vars:
+        systemd_networkd_network:
+          lo:
+            - Match:
+              - Name: "lo"
+            - Network:
+              - Address: "127.0.0.1/8"
+              - Address: "10.0.99.0/32"
+        systemd_networkd_apply_config: true
+        systemd_networkd_enable_resolved: false
+        systemd_networkd_symlink_resolv_conf: false
+        systemd_networkd_manage_nsswitch_config: false
+
+#- name: configure networkmanager
+#  hosts: crib
+#  become: yes
+#  tasks:
+#    - name: copy over config files
+#      copy:
+#        src: ./dir/etc/NetworkManager/conf.d/
+#        dest: /etc/NetworkManager/conf.d/
+#        owner: root
+#        group: root
+#        mode: '0644'
+#      notify: reload 
+#
+#    - name: enable networkmanager
+#      systemd_service:
+#        name: NetworkManager
+#        state: "{{ 'reloaded' if nm_config.changed else 'started' }}"
+#        enabled: true
+#
+#    - name: get rid of mkbaseimg.sh networking
+#      file:
+#        path: "/etc/systemd/network/80-dhcp.network"
+#        state: absent
+#      register: mkbaseimg_networking_deleted
+#
+#    - name: reload systemd-networkd before handoff
+#      systemd_service:
+#        name: systemd-networkd
+#        state: reloaded
+#        enabled: true
+#      when: mkbaseimg_networking_deleted.changed
