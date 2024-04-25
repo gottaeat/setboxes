@@ -1,0 +1,8 @@
+---
+mss_user_pkgs_base:
+  - chromium-widevine
+  - dragon-drop
+  - fbcat
+  - ookla-speedtest-bin
+  - ttf-ms-fonts
+  - ungoogled-chromium-bin
