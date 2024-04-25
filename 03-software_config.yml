@@ -161,3 +161,83 @@
         force: true
         follow: false
       with_items: "{{ mss_wireguard_ifaces }}"
+
+- name: configure bind
+  hosts: crib
+  become: yes
+  vars:
+      ansible_ssh_common_args: "-t"
+  roles:
+    - role: ansible-resolv
+      vars:
+        resolv_nameservers:
+          - "10.0.99.0"
+        resolv_search:
+          - "crib"
+          - "lichen"
+          - "lichenraw"
+  pre_tasks:
+    - name: copy over systemd overrides
+      copy:
+        src: ./dir/etc/systemd/system/named.service.d
+        dest: /etc/systemd/system
+        owner: root
+        group: root
+        mode: '0640'
+      register: named_systemd_override
+
+    - name: daemon reload
+      systemd_service:
+        daemon_reload: true
+      when: named_systemd_override.changed
+
+    - name: base named configuration
+      ansible.posix.synchronize:
+        src: "./dir/etc/{{ item }}"
+        dest: /etc
+        archive: yes
+        delete: false
+        owner: false
+        group: false
+        times: false
+        checksum: true
+        rsync_opts:
+            - "--chown=named:named"
+            - "--chmod=F640"
+      with_items:
+        - named.conf
+        - rndc.conf
+      register: base_named_copy
+
+    - name: zonefiles
+      ansible.posix.synchronize:
+        src: ./dir/var/named
+        dest: /var
+        archive: yes
+        delete: true
+        owner: false
+        group: false
+        times: false
+        checksum: true
+        rsync_opts:
+            - "--chown=named:named"
+            - "--chmod=D750,F640"
+      register: zone_named_copy
+
+    - name: generate /etc/rndc.key
+      command:
+        cmd: rndc-confgen -a -c /etc/rndc.key
+        creates: /etc/rndc.key
+
+    - name: set perms for rndc.key
+      file:
+        path: /etc/rndc.key
+        owner: root
+        group: named
+        mode: '0640'
+
+    - name: set named state
+      systemd_service:
+        name: named
+        state: "{{ 'restarted' if named_systemd_override.changed or base_named_copy.changed or zone_named_copy.changed else 'started' }}"
+        enabled: true
