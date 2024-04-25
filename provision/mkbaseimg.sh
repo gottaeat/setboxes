@@ -16,7 +16,7 @@ POOLDIR="/mnt/mss/stuff/techy-bits/pools/setboxes"
 MOUNT="${PWD}/nbdmount"
 NBDDEV="/dev/nbd0"
 IMGNAME="loggedin.qcow2"
-IMGSIZE="10752M" # 10G + 512M
+IMGSIZE="20992M" # 20G + 512M
 MIRROR='https://geo.mirror.pkgbuild.com/$repo/os/$arch'
 
 # - - create image and partitions - - #
@@ -69,7 +69,7 @@ arch-chroot "${MOUNT}" \
 echo -e "loggedin\nloggedin" | arch-chroot "${MOUNT}" /usr/bin/passwd "root"
 
 # - - resolv - - #
-echo "1.1.1.1" > "${MOUNT}"/etc/resolv.conf
+echo "nameserver 1.1.1.1" > "${MOUNT}"/etc/resolv.conf
 
 # - - pacman - - #
 rm -rfv "${MOUNT}/etc/pacman.d/gnupg/"
