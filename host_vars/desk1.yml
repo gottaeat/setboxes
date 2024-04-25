@@ -8,6 +8,8 @@ mss_groups_extra:
   - libvirt
   - pulse-access
   - wireshark
+mss_wireguard_ifaces:
+  - lichen
 mss_main_pkgs_extra:
   - aarch64-linux-gnu-gcc
   - acpid
