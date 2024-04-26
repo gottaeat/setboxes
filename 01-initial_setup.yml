@@ -48,13 +48,10 @@
     - name: configure sudo
       block:
         - name: allow wheel to run sudo
-          community.general.sudoers:
-            name: wheelgroup
-            state: present
-            group: wheel
-            nopassword: false
-            commands: ALL
-            host: ALL
+          replace:
+            path: /etc/sudoers
+            regexp: '^# (%wheel ALL=\(ALL:ALL\) ALL)'
+            replace: '\1'
 
         - name: disable lecture prompt
           copy:
