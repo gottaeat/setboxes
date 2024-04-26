@@ -84,7 +84,7 @@
         - name: copy banner
           ansible.builtin.copy:
             src: "./files/banners/{{ mss_hostname }}"
-            dest: /etc/ssh
+            dest: /etc/ssh/banner
             owner: root
             group: root
             mode: '0644'
