@@ -60,7 +60,7 @@
             dest: "/etc/sudoers.d/lecture"
             owner: root
             group: root
-            mode: '0440'
+            mode: '0400'
 
         - name: allow group mss to run rsync as root w/o a password
           community.general.sudoers:
