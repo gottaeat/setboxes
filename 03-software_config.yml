@@ -598,3 +598,49 @@
         owner: root
         group: root
         mode: '0644'
+
+# - - misc end - - #
+- name: handle aur
+  hosts: crib
+  become: yes
+  tasks:
+    - name: create aur user
+      user:
+        name: aur
+        group: wheel
+        append: false
+        create_home: true
+        skeleton: /dev/null
+        expires: -1
+        state: present
+
+    - name: allow aur to run pacman as root w/o a password
+      copy:
+        content: |
+          aur ALL=(ALL) NOPASSWD: /usr/bin/pacman
+        dest: /etc/sudoers.d/aur
+        owner: root
+        group: root
+        mode: '0400'
+
+    - name: check if yay is installed
+      stat:
+        path: /usr/bin/yay
+      register: yay_installed
+
+    - name: build yay
+      become_user: aur
+      block:
+        - name: clone repo
+          git:
+            repo: "https://aur.archlinux.org/yay.git"
+            dest: /tmp/yay
+            depth: 1
+            recursive: yes
+
+        - name: build and install yay
+          shell:
+            chdir: /tmp/yay
+            cmd: |
+                makepkg -sri --noconfirm
+      when: not yay_installed.stat.exists
