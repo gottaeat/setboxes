@@ -83,6 +83,7 @@ mss_main_pkgs_base:
   - pulseaudio-alsa
   - python
   - python-black
+  - python-lxml
   - python-pip
   - python-pylint
   - qbittorrent-nox
