@@ -253,19 +253,6 @@
         mode: '0644'
       register: dockerns_copy
 
-    - name: daemon reload
-      systemd_service:
-        daemon_reload: true
-      when: dockerns_copy.changed
-
-    - name: set dockerns state
-      systemd_service:
-        name: dockerns
-        state: "{{ 'restarted' if dockerns_copy.changed else 'started' }}"
-        enabled: true
-      register: dockerns_service_state
-      when: dockerns_copy.changed
-
     - name: copy over docker overrides
       copy:
         src: ./dir/etc/systemd/system/docker.service.d
@@ -288,7 +275,15 @@
     - name: daemon reload
       systemd_service:
         daemon_reload: true
-      when: docker_systemd_override.changed or docker_systemd_file_replace.changed
+      when: ( dockerns_copy.changed or docker_systemd_override.changed or docker_systemd_file_replace.changed )
+
+    - name: set dockerns state
+      systemd_service:
+        name: dockerns
+        state: "{{ 'restarted' if dockerns_copy.changed else 'started' }}"
+        enabled: true
+      register: dockerns_service_state
+      when: dockerns_copy.changed
 
     - name: set docker state
       systemd_service:
@@ -298,6 +293,48 @@
       with_items:
         - docker
         - containerd
+
+- name: configure libvirt
+  hosts: crib
+  become: yes
+  tasks:
+    - name: copy over libvirtdns service
+      copy:
+        src: ./dir/etc/systemd/system/libvirtdns.service
+        dest: /etc/systemd/system
+        owner: root
+        group: root
+        mode: '0644'
+      register: libvirtdns_copy
+
+    - name: copy over libvirtd overrides
+      copy:
+        src: ./dir/etc/systemd/system/libvirtd.service.d
+        dest: /etc/systemd/system
+        owner: root
+        group: root
+        mode: '0644'
+      register: libvirtd_systemd_override
+
+    - name: daemon reload
+      systemd_service:
+        daemon_reload: true
+      when: ( libvirtdns_copy.changed or libvirtd_systemd_override.changed )
+
+    - name: set libvirtdns state
+      systemd_service:
+        name: libvirtdns
+        state: "{{ 'restarted' if libvirtdns_copy.changed else 'started' }}"
+        enabled: true
+
+    - name: set libvirt state
+      systemd_service:
+        name: "{{ item }}"
+        state: "{{ 'restarted' if libvirtd_systemd_override.changed else 'started' }}"
+        enabled: true
+      with_items:
+        - libvirtd
+        - virtlogd
 
 - name: configure pulseaudio
   hosts: crib
@@ -363,45 +400,3 @@
         name: pulseaudio
         state: restarted
         enabled: true
-
-- name: configure libvirt
-  hosts: crib
-  become: yes
-  tasks:
-    - name: copy over libvirtdns service
-      copy:
-        src: ./dir/etc/systemd/system/libvirtdns.service
-        dest: /etc/systemd/system
-        owner: root
-        group: root
-        mode: '0644'
-      register: libvirtdns_copy
-
-    - name: copy over libvirtd overrides
-      copy:
-        src: ./dir/etc/systemd/system/libvirtd.service.d
-        dest: /etc/systemd/system
-        owner: root
-        group: root
-        mode: '0644'
-      register: libvirtd_systemd_override
-
-    - name: daemon reload
-      systemd_service:
-        daemon_reload: true
-      when: ( libvirtdns_copy.changed or libvirtd_systemd_override.changed )
-
-    - name: set libvirtdns state
-      systemd_service:
-        name: libvirtdns
-        state: "{{ 'restarted' if libvirtdns_copy.changed else 'started' }}"
-        enabled: true
-
-    - name: set libvirt state
-      systemd_service:
-        name: "{{ item }}"
-        state: "{{ 'restarted' if libvirtd_systemd_override.changed else 'started' }}"
-        enabled: true
-      with_items:
-        - libvirtd
-        - virtlogd
