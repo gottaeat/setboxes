@@ -462,3 +462,18 @@
         name: tor
         state: started
         enabled: true
+
+- name: bulk enable extra services
+  hosts: crib
+  become: yes
+  tasks:
+    - name: bulk enable extra services
+      systemd_service:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      with_items:
+        - gpm
+        - linux-modules-cleanup
+        - qbittorrent-nox@mss.service
+        - vnstat
