@@ -1,3 +1,6 @@
+# - - mss-otg begin - - #
+# this is a dependency for some of the services as it provides the handler
+# hooks
 - name: install mss-otg utils + landfill
   hosts: crib
   become: yes
@@ -124,6 +127,9 @@
         - "/etc/profile"
         - "/etc/bash.bashrc"
 
+# - - mss-otg end - - #
+
+# - - services begin - - #
 - name: configure nftables
   hosts: crib
   become: yes
@@ -546,3 +552,49 @@
         - linux-modules-cleanup
         - qbittorrent-nox@mss.service
         - vnstat
+
+# - - services end - - #
+
+# - - misc begin - - #
+- name: configure vim
+  hosts: crib
+  become: yes
+  vars:
+    dir: [ ['/root', 'root'], ['/home/mss', 'mss'] ]
+    subdir: [ 'backups', 'swaps' ]
+  tasks:
+    - name: copy over vim configuration
+      copy:
+        src: ./dir/etc/vimrc
+        dest: /etc
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: create directories
+      file:
+        path: "{{ item.0.0 }}/.config/vim/{{ item.1 }}"
+        owner: "{{ item.0.1 }}"
+        group: "{{ item.0.1 }}"
+        state: directory
+      loop: "{{ dir | product(subdir) | list }}"
+
+- name: configure x11
+  hosts: crib
+  become: yes
+  tasks:
+    - name: allow x11 to run as root
+      copy:
+        src: ./dir/etc/X11/Xwrapper.config
+        dest: /etc/X11
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: copy xorg-server config for host
+      copy:
+        src: "./dir/etc/X11/xorg.conf.d/01-{{ mss_hostname }}.conf"
+        dest: /etc/X11/xorg.conf.d
+        owner: root
+        group: root
+        mode: '0644'
