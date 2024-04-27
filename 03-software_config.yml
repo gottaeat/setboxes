@@ -757,10 +757,23 @@
             update_cache: yes
             upgrade: yes
             use: yay
+            extra_args:
+              - "--useask"
 
         - name: install the packages
           kewlfft.aur.aur:
             name: "{{ (mss_user_pkgs_base + mss_user_pkgs_extra) }}"
             use: yay
+          notify: cleanup pacman
+
+  handlers:
+    - name: cleanup pacman
+      become_user: aur
+      shell: |
+        yay -Scc --noconfirm && \
+        pacman -Qtdq | pacman -Rns - --noconfirm && \
+        pacman -Qqd | pacman -Rsu - --noconfirm
+      ignore_errors: true
+
 
 # - - aur end - - #
