@@ -298,43 +298,101 @@
   hosts: crib
   become: yes
   tasks:
-    - name: copy over libvirtdns service
-      copy:
-        src: ./dir/etc/systemd/system/libvirtdns.service
-        dest: /etc/systemd/system
-        owner: root
-        group: root
-        mode: '0644'
-      register: libvirtdns_copy
+    - name: set up libvirt service
+      block:
+        - name: copy over libvirtdns service
+          copy:
+            src: ./dir/etc/systemd/system/libvirtdns.service
+            dest: /etc/systemd/system
+            owner: root
+            group: root
+            mode: '0644'
+          register: libvirtdns_copy
 
-    - name: copy over libvirtd overrides
-      copy:
-        src: ./dir/etc/systemd/system/libvirtd.service.d
-        dest: /etc/systemd/system
-        owner: root
-        group: root
-        mode: '0644'
-      register: libvirtd_systemd_override
+        - name: copy over libvirtd overrides
+          copy:
+            src: ./dir/etc/systemd/system/libvirtd.service.d
+            dest: /etc/systemd/system
+            owner: root
+            group: root
+            mode: '0644'
+          register: libvirtd_systemd_override
 
-    - name: daemon reload
-      systemd_service:
-        daemon_reload: true
-      when: ( libvirtdns_copy.changed or libvirtd_systemd_override.changed )
+        - name: daemon reload
+          systemd_service:
+            daemon_reload: true
+          when: ( libvirtdns_copy.changed or libvirtd_systemd_override.changed )
 
-    - name: set libvirtdns state
-      systemd_service:
-        name: libvirtdns
-        state: "{{ 'restarted' if libvirtdns_copy.changed else 'started' }}"
-        enabled: true
+        - name: set libvirtdns state
+          systemd_service:
+            name: libvirtdns
+            state: "{{ 'restarted' if libvirtdns_copy.changed else 'started' }}"
+            enabled: true
 
-    - name: set libvirt state
-      systemd_service:
-        name: "{{ item }}"
-        state: "{{ 'restarted' if libvirtd_systemd_override.changed else 'started' }}"
-        enabled: true
-      with_items:
-        - libvirtd
-        - virtlogd
+        - name: set libvirt state
+          systemd_service:
+            name: "{{ item }}"
+            state: "{{ 'restarted' if libvirtd_systemd_override.changed else 'started' }}"
+            enabled: true
+          with_items:
+            - libvirtd
+            - virtlogd
+
+    - name: baremetal check
+      stat:
+        path: /mnt/mss/stuff/techy-bits/pools
+      register: on_baremetal
+
+    - name: set up boxes
+      block:
+        - name: define networks
+          community.libvirt.virt_net:
+            command: define
+            name: "{{ item.name }}"
+            xml: '{{ lookup("file", item.xml) }}'
+          with_items:
+            - { name: "gat", xml: "./virtxml/net_gat.xml" }
+            - { name: "cumvirt", xml: "./virtxml/net_cumvirt.xml" }
+
+        - name: define pools
+          community.libvirt.virt_pool:
+            command: define
+            name: "{{ item.name }}"
+            xml: '{{ lookup("file", item.xml) }}'
+          with_items:
+            - { name: "cumvirt", xml: "./virtxml/pool_cumvirt.xml" }
+            - { name: "gat", xml: "./virtxml/pool_gat.xml" }
+            - { name: "iso", xml: "./virtxml/pool_iso.xml" }
+
+        - name: set network status
+          community.libvirt.virt_net:
+            autostart: true
+            state: active
+            name: "{{ item }}"
+          with_items:
+            - cumvirt
+            - gat
+          when: on_baremetal.stat.exists
+
+        - name: set pool status
+          community.libvirt.virt_pool:
+            autostart: true
+            state: active
+            name: "{{ item }}"
+          with_items:
+            - cumvirt
+            - gat
+            - iso
+          when: on_baremetal.stat.exists
+
+        - name: define domains
+          community.libvirt.virt:
+            command: define
+            autostart: false
+            xml: '{{ lookup("file", item) }}'
+          with_items:
+            - virtxml/dom_win10-ltsc-21h2.xml
+          when: on_baremetal.stat.exists
 
 - name: configure pulseaudio
   hosts: crib
