@@ -444,3 +444,21 @@
         name: ntpd
         state: "{{ 'restarted' if ntpd_copy.changed else 'started' }}"
         enabled: true
+
+- name: configure tor
+  hosts: crib
+  become: yes
+  tasks:
+    - name: copy over proxychains config
+      copy:
+        src: ./dir/etc/proxychains.conf
+        dest: /etc
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: set tor state
+      systemd_service:
+        name: tor
+        state: started
+        enabled: true
