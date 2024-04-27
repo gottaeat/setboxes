@@ -298,3 +298,68 @@
       with_items:
         - docker
         - containerd
+
+- name: configure pulseaudio
+  hosts: crib
+  become: yes
+  tasks:
+    - name: configure user pulse
+      block:
+        - name: add pulseaudio groups
+          ansible.builtin.group:
+            name: "{{ item }}"
+            state: present
+          with_items:
+            - pulse
+            - pulse-access
+
+        - name: add pulse user
+          ansible.builtin.user:
+            name: pulse
+            group: pulse
+            groups: audio
+            append: false
+            system: true
+            create_home: true
+            home: /var/run/pulse
+            skeleton: /dev/null
+            expires: -1
+            state: present
+
+    - name: copy over pulseaudio configuration
+      copy:
+        src: "./dir/etc/pulse/{{ item }}.conf"
+        dest: /etc/pulse/
+        owner: root
+        group: root
+        mode: '0644'
+      with_items:
+        - client
+        - daemon
+      notify: restart pulseaudio
+
+    - name: set pulseaudio to use the socket
+      replace:
+        path: "/etc/pulse/{{ item }}.pa"
+        regexp: "^load-module module-native-protocol-unix$"
+        replace: "load-module module-native-protocol-unix auth-anonymous=1 socket=/var/run/pulse/native"
+      notify: restart pulseaudio
+      with_items:
+        - default
+        - system
+
+    - name: copy over pulseaudio systemd service
+      copy:
+        src: "./dir/etc/systemd/system/pulseaudio.service"
+        dest: /etc/systemd/system
+        owner: root
+        group: root
+        mode: '0644'
+      notify: restart pulseaudio
+
+  handlers:
+    - name: restart pulseaudio
+      systemd_service:
+        name: pulseaudio
+        state: restarted
+        enabled: true
