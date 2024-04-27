@@ -1,0 +1,10 @@
+roles:
+  - name: systemd-networkd
+    src: https://github.com/aruhier/ansible-role-systemd-networkd
+    version: master
+  - name: ansible-resolv
+    src: https://github.com/ahuffman/ansible-resolv
+    version: master
+
+collections:
+  - name: kewlfft.aur
