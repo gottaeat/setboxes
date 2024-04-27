@@ -40,6 +40,7 @@ mss_main_pkgs_extra:
   - mangohud
   - mesa-vdpau
   - minetest
+  - obs-studio
   - openal
   - openmw
   - qemu-desktop
@@ -59,6 +60,5 @@ mss_user_pkgs_extra:
   - dynamips
   - gns3-gui
   - gns3-server
-  - obs-studio-liberty
   - ubridge
   - xone-dkms-git
