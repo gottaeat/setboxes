@@ -398,6 +398,17 @@
   hosts: crib
   become: yes
   tasks:
+    # need to take a reboot for this normally, but this file never changes and
+    # it gets copied over when we're setting up in the vm, should not fuck
+    # anything up
+    - name: copy over dbus policy overrides
+      copy:
+        src: ./dir/usr/share/dbus-1/system.d/pulseaudio.conf
+        dest: /usr/share/dbus-1/system.d/
+        owner: root
+        group: root
+        mode: '0644'
+
     - name: configure user pulse
       block:
         - name: add pulseaudio groups
