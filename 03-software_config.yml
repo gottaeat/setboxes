@@ -165,8 +165,6 @@
 - name: configure bind
   hosts: crib
   become: yes
-  vars:
-      ansible_ssh_common_args: "-t"
   roles:
     - role: ansible-resolv
       vars:
@@ -241,3 +239,62 @@
         name: named
         state: "{{ 'restarted' if named_systemd_override.changed or base_named_copy.changed or zone_named_copy.changed else 'started' }}"
         enabled: true
+
+- name: configure docker
+  hosts: crib
+  become: yes
+  tasks:
+    - name: copy over dockerns service
+      copy:
+        src: ./dir/etc/systemd/system/dockerns.service
+        dest: /etc/systemd/system
+        owner: root
+        group: root
+        mode: '0644'
+      register: dockerns_copy
+
+    - name: daemon reload
+      systemd_service:
+        daemon_reload: true
+      when: dockerns_copy.changed
+
+    - name: set dockerns state
+      systemd_service:
+        name: dockerns
+        state: "{{ 'restarted' if dockerns_copy.changed else 'started' }}"
+        enabled: true
+      register: dockerns_service_state
+      when: dockerns_copy.changed
+
+    - name: copy over docker overrides
+      copy:
+        src: ./dir/etc/systemd/system/docker.service.d
+        dest: /etc/systemd/system
+        owner: root
+        group: root
+        mode: '0644'
+      register: docker_systemd_override
+
+    - name: modify docker and containerd LimitNOFILE
+      replace:
+        path: "/usr/lib/systemd/system/{{ item }}.service"
+        regexp: 'LimitNOFILE=infinity'
+        replace: 'LimitNOFILE=1024:524288'
+      with_items:
+        - containerd
+        - docker
+      register: docker_systemd_file_replace
+
+    - name: daemon reload
+      systemd_service:
+        daemon_reload: true
+      when: docker_systemd_override.changed or docker_systemd_file_replace.changed
+
+    - name: set docker state
+      systemd_service:
+        name: "{{ item }}"
+        state: "{{ 'restarted' if docker_systemd_override.changed or docker_systemd_file_replace.changed else 'started' }}"
+        enabled: true
+      with_items:
+        - docker
+        - containerd
