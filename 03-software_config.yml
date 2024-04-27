@@ -600,9 +600,13 @@
         mode: '0644'
 
 # - - misc end - - #
+
+# - - aur begin - - #
 - name: handle aur
   hosts: crib
   become: yes
+  vars_files:
+    - files/pkglist/user.yml
   tasks:
     - name: create aur user
       user:
@@ -644,3 +648,19 @@
             cmd: |
                 makepkg -sri --noconfirm
       when: not yay_installed.stat.exists
+
+    - name: install aur packages
+      become_user: aur
+      block:
+        - name: update and upgrade
+          kewlfft.aur.aur:
+            update_cache: yes
+            upgrade: yes
+            use: yay
+
+        - name: install the packages
+          kewlfft.aur.aur:
+            name: "{{ (mss_user_pkgs_base + mss_user_pkgs_extra) }}"
+            use: yay
+
+# - - aur end - - #
