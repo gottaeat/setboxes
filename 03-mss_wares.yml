@@ -1,0 +1,220 @@
+- name: install mss-otg utils + landfill
+  hosts: crib
+  become: yes
+  tasks:
+    # 1. check if we're on baremetal
+    - name: check if mss_otg_path exists
+      stat:
+        path: "{{ mss_otg_path }}"
+      register: otg_on_baremetal
+
+    # 2. check if vm init was done
+    - name: check if vm init was done
+      stat:
+        path: /var/lib/mss_ansible/otg_vm_init_done
+      register: otg_vm_init
+
+    # 3. we are in the vm, clone the repo
+    - name: vm pre-install
+      block:
+        - name: set otg-path
+          set_fact:
+            otg_path: "/tmp/mss-otg"
+
+        - name: clone mss-otg
+          git:
+            repo: "https://github.com/gottaeat/mss-otg"
+            dest: "{{ otg_path }}"
+            depth: 1
+            recursive: yes
+      when: not otg_on_baremetal.stat.exists and not otg_vm_init.stat.exists
+
+    # 4. we are on baremetal
+    - name: baremetal pre-install
+      block:
+        - name: set otg-path
+          set_fact:
+            otg_path: "{{ mss_otg_path }}"
+
+        - name: read the hash of the installed otg
+          block:
+            - name: slurp the otg commit file
+              slurp:
+                src: /var/lib/mss_ansible/otg_commit
+              register: otg_commit_hash_b64
+
+            - name: decode the hash
+              set_fact:
+                installed_otg_hash: "{{ otg_commit_hash_b64['content'] | b64decode }}"
+      when: otg_on_baremetal.stat.exists
+
+    # 5. read the HEAD commit hash
+    - name: read the hash of the head
+      shell:
+        chdir: "{{ otg_path }}"
+        cmd: |
+           git rev-parse --short HEAD
+      register: head_otg_hash
+      changed_when: false
+      when: otg_on_baremetal.stat.exists or not otg_vm_init.stat.exists
+
+    # 6. install when:
+    #  a. we are in the vm and we never installed mss-otg
+    #  b. we are on baremetal and the installed hash does not match the HEAD
+    - name: build otg
+      block:
+        - name: create build directory
+          file:
+            path: "{{ otg_path }}/{{ item }}/build"
+            state: directory
+          with_items:
+            - utils
+            - landfill
+
+        - name: build and install otg
+          shell:
+            chdir: "{{ otg_path }}/{{ item }}/build"
+            cmd: |
+              meson setup ../ && ninja && ninja install
+          with_items:
+            - utils
+            - landfill
+
+        - name: remove build artifacts
+          file:
+            path: "{{ otg_path }}/{{ item }}/build"
+            state: absent
+          with_items:
+            - utils
+            - landfill
+
+        - name: update the hash
+          copy:
+            content: "{{ head_otg_hash }}"
+            dest: /var/lib/mss_ansible/otg_commit
+
+        - name: set otg_vm_init
+          file:
+            path: /var/lib/mss_ansible/otg_vm_init_done
+            state: touch
+            modification_time: preserve
+            access_time: preserve
+          when: not otg_vm_init.stat.exists
+      when: (not otg_on_baremetal.stat.exists and not otg_vm_init.stat.exists ) or ( otg_on_baremetal.stat.exists and installed_otg_hash != head_otg_hash )
+
+    # 7. post-install
+    - name: set otg ownership
+      file:
+        path: "/mss/{{ item }}"
+        owner: root
+        group: root
+        recurse: yes
+      with_items:
+        - "bin"
+        - "etc"
+        - "share"
+
+    - name: install symlinks for the bash-handler
+      file:
+        src: "/mss/share/bash-handler"
+        dest: "{{ item }}"
+        state: link
+        force: yes
+      with_items:
+        - "/etc/profile"
+        - "/etc/bash.bashrc"
+
+- name: install mss-nfqws
+  hosts: crib
+  become: yes
+  tasks:
+    # 1. check if we're on baremetal
+    - name: check if mss_nfqws_path exists
+      stat:
+        path: "{{ mss_nfqws_path }}"
+      register: nfqws_on_baremetal
+
+    # 2. check if vm init was done
+    - name: check if vm init was done
+      stat:
+        path: /var/lib/mss_ansible/nfqws_vm_init_done
+      register: nfqws_vm_init
+
+    # 3. we are in the vm, clone the repo
+    - name: vm pre-install
+      block:
+        - name: set nfqws-path
+          set_fact:
+            nfqws_path: "/tmp/mss-nfqws"
+
+        - name: clone mss-nfqws
+          git:
+            repo: "https://github.com/gottaeat/mss-nfqws"
+            dest: "{{ nfqws_path }}"
+            depth: 1
+            recursive: yes
+      when: not nfqws_on_baremetal.stat.exists and not nfqws_vm_init.stat.exists
+
+    # 4. we are on baremetal
+    - name: baremetal pre-install
+      block:
+        - name: set nfqws-path
+          set_fact:
+            nfqws_path: "{{ mss_nfqws_path }}"
+
+        - name: read the hash of the installed nfqws
+          block:
+            - name: slurp the nfqws commit file
+              slurp:
+                src: /var/lib/mss_ansible/nfqws_commit
+              register: nfqws_commit_hash_b64
+
+            - name: decode the hash
+              set_fact:
+                installed_nfqws_hash: "{{ nfqws_commit_hash_b64['content'] | b64decode }}"
+      when: nfqws_on_baremetal.stat.exists
+
+    # 5. read the HEAD commit hash
+    - name: read the hash of the head
+      shell:
+        chdir: "{{ nfqws_path }}"
+        cmd: |
+           git rev-parse --short HEAD
+      register: head_nfqws_hash
+      changed_when: false
+      when: nfqws_on_baremetal.stat.exists or not nfqws_vm_init.stat.exists
+
+    # 6. install when:
+    #  a. we are in the vm and we never installed mss-nfqws
+    #  b. we are on baremetal and the installed hash does not match the HEAD
+    - name: build nfqws
+      block:
+        - name: create build directory
+          file:
+            path: "{{ nfqws_path }}/build"
+            state: directory
+
+        - name: build and install nfqws
+          shell:
+            chdir: "{{ nfqws_path }}/build"
+            cmd: |
+              meson setup ../ && ninja && ninja install
+
+        - name: remove build artifacts
+          file:
+            path: "{{ nfqws_path }}/build"
+            state: absent
+
+        - name: update the hash
+          copy:
+            content: "{{ head_nfqws_hash }}"
+            dest: /var/lib/mss_ansible/nfqws_commit
+
+        - name: set nfqws_vm_init
+          file:
+            path: /var/lib/mss_ansible/nfqws_vm_init_done
+            state: touch
+            modification_time: preserve
+            access_time: preserve
+          when: not nfqws_vm_init.stat.exists
+      when: (not nfqws_on_baremetal.stat.exists and not nfqws_vm_init.stat.exists ) or ( nfqws_on_baremetal.stat.exists and installed_nfqws_hash != head_nfqws_hash )
