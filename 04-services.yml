@@ -424,6 +424,25 @@
         state: started
         enabled: true
 
+- name: configure acpid
+  hosts: solitude
+  become: yes
+  tasks:
+    - name: copy over the acpid handler script
+      copy:
+        src: ./dir/etc/acpi/handler.sh
+        dest: /etc/acpi
+        owner: root
+        group: root
+        mode: '0644'
+      register: ntpd_copy
+
+    - name: set acpid state
+      systemd_service:
+        name: acpid
+        state: "{{ 'restarted' if acpid_copy.changed else 'started' }}"
+        enabled: true
+
 - name: bulk enable extra services
   hosts: crib
   become: yes
