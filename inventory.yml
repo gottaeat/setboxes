@@ -3,6 +3,8 @@ crib:
   hosts:
     desk1:
       ansible_host: 192.168.199.2
+    x230:
+      ansible_host: 192.168.199.3
 
 want_docker:
   hosts:
