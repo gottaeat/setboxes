@@ -168,6 +168,12 @@
         - docker
         - containerd
 
+    - name: add user mss to group docker
+      user:
+        name: mss
+        groups: docker
+        append: yes
+
 - name: configure libvirt
   hosts: crib
   become: yes
@@ -211,6 +217,12 @@
           with_items:
             - libvirtd
             - virtlogd
+
+    - name: add user mss to group libvirt
+      user:
+        name: mss
+        groups: libvirt
+        append: yes
 
     - name: baremetal check
       stat:
@@ -336,6 +348,12 @@
         group: root
         mode: '0644'
       notify: restart pulseaudio
+
+    - name: add user mss to group pulse-access
+      user:
+        name: mss
+        groups: pulse-access
+        append: yes
 
   handlers:
     - name: restart pulseaudio

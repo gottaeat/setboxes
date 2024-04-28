@@ -129,6 +129,8 @@
   vars_files:
     - files/pkglist/main.yml
     - files/pkglist/user.yml
+  vars:
+    pkgs: "{{ (mss_user_pkgs_base + mss_user_pkgs_extra + mss_main_pkgs_base + mss_main_pkgs_extra) }}"
   tasks:
     - name: create aur user
       user:
@@ -195,11 +197,27 @@
 
         - name: install the packages
           kewlfft.aur.aur:
-            name: "{{ (mss_user_pkgs_base + mss_user_pkgs_extra + mss_main_pkgs_base + mss_main_pkgs_extra) }}"
+            name: "{{ pkgs }}"
             use: yay
             aur_only: false
             extra_args: "--ask 4"
           notify: cleanup pacman
+
+    - name: handle groups
+      block:
+        - name: add user mss to group adbusers
+          user:
+            name: mss
+            groups: adbusers
+            append: yes
+          when: '"android-tools" in pkgs'
+
+        - name: add user mss to group wireshark
+          user:
+            name: mss
+            groups: wireshark
+            append: yes
+          when: '"wireshark-qt" in pkgs'
 
   handlers:
     - name: cleanup pacman
