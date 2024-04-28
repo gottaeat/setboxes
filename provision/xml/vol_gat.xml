@@ -1,6 +1,6 @@
 <volume>
     <name>gat.qcow2</name>
-    <capacity unit="M">20992</capacity>
+    <capacity unit="M">26112</capacity>
     <target>
         <path>/mnt/mss/stuff/techy-bits/pools/setboxes/gat.qcow2</path>
         <format type="qcow2" />
