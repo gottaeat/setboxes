@@ -2,12 +2,6 @@
 mss_hostname: gat
 mss_fstab_extra: |
   /dev/sda1 /boot vfat defaults 0 0
-mss_groups_extra:
-  - adbusers
-  - docker
-  - libvirt
-  - pulse-access
-  - wireshark
 mss_wireguard_ifaces:
   - lichen
 mss_main_pkgs_extra:
