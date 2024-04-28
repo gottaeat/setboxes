@@ -38,7 +38,13 @@ pinfo "swap uuid    → ${_SWAPUUID} "
 pinfo "swap offset  → ${_SWAPOFFS} "
 pinfo "full cmdline → ${_CMDLINE}  "
 
+# - - mkinitcpio - - #
+pinfo "calling mkinitcpio"
+mkinitcpio -P
+
 # - - efibootmgr - - #
+pinfo "calling efibootmgr"
+
 _EFIENTRIES="$(efibootmgr -u \
     | awk '/Boot[0-9][0-9][0-9][0-9]. arch/{gsub(/Boot|\*/,"");print $1}')"
 
