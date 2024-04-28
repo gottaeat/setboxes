@@ -6,6 +6,7 @@
         <dhcp>
             <range start="192.168.199.2" end="192.168.199.254"/>
             <host mac="00:00:ab:ad:1d:ea" name="gat" ip="192.168.199.2"/>
+            <host mac="00:00:ab:ad:1d:eb" name="solitude" ip="192.168.199.3"/>
         </dhcp>
     </ip>
 </network>
