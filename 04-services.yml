@@ -115,7 +115,7 @@
         enabled: true
 
 - name: configure docker
-  hosts: crib
+  hosts: want_docker
   become: yes
   tasks:
     - name: copy over dockerns service
@@ -175,7 +175,7 @@
         append: yes
 
 - name: configure libvirt
-  hosts: crib
+  hosts: want_libvirt
   become: yes
   tasks:
     - name: set up libvirt service
