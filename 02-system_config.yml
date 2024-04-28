@@ -101,129 +101,114 @@
         group: root
         mode: '0644'
 
-- name: install packages
+    - name: check if mss-otg sourceme-build exists
+      stat:
+        path: /mss/etc/sourceme-build
+      register: sourceme_build_state
+
+    - name: one-off mss-otg sourceme-build
+      block:
+        - name: create paths
+          file:
+            path: /mss/etc
+            state: directory
+            recurse: true
+
+        - name: download one-off sourceme-build
+          get_url:
+            url: 'https://raw.githubusercontent.com/gottaeat/mss-otg/master/utils/etc/sourceme-build'
+            dest: /mss/etc/sourceme-build
+            owner: root
+            group: root
+            mode: '0644'
+      when: not sourceme_build_state.stat.exists
+
+- name: handle aur
   hosts: crib
   become: yes
   vars_files:
     - files/pkglist/main.yml
+    - files/pkglist/user.yml
   tasks:
-    - name: initial update and upgrade
-      community.general.pacman:
-        update_cache: true
-        upgrade: true
-      notify: cleanup pacman
-
-    - name: install packages
-      community.general.pacman:
-        name: "{{ (mss_main_pkgs_base + mss_main_pkgs_extra) }}"
-        update_cache: true
+    - name: create aur user
+      user:
+        name: aur
+        group: wheel
+        append: false
+        create_home: true
+        skeleton: /dev/null
+        expires: -1
         state: present
-        extra_args: "--ask 4"
-      notify: cleanup pacman
+
+    - name: allow aur to run pacman as root w/o a password
+      copy:
+        content: |
+          aur ALL=(ALL) NOPASSWD: /usr/bin/pacman
+        dest: /etc/sudoers.d/aur
+        owner: root
+        group: root
+        mode: '0400'
+
+    - name: check if yay is installed
+      stat:
+        path: /usr/bin/yay
+      register: yay_installed
+
+    - name: build yay
+      become_user: aur
+      block:
+        - name: install yay build deps
+          become_user: root
+          community.general.pacman:
+            name:
+              - git
+              - go
+              - base-devel
+            update_cache: true
+            state: present
+            extra_args: "--ask 4"
+
+        - name: clone repo
+          git:
+            repo: "https://aur.archlinux.org/yay.git"
+            dest: /tmp/yay
+            depth: 1
+            recursive: yes
+
+        - name: build and install yay
+          shell:
+            chdir: /tmp/yay
+            cmd: |
+                makepkg -sri --noconfirm
+      when: not yay_installed.stat.exists
+
+    - name: install aur packages
+      become_user: aur
+      block:
+        - name: update and upgrade
+          kewlfft.aur.aur:
+            use: yay
+            aur_only: false
+            update_cache: true
+            upgrade: true
+            extra_args: "--ask 4"
+
+        - name: install the packages
+          kewlfft.aur.aur:
+            name: "{{ (mss_user_pkgs_base + mss_user_pkgs_extra + mss_main_pkgs_base + mss_main_pkgs_extra) }}"
+            use: yay
+            aur_only: false
+            extra_args: "--ask 4"
+          notify: cleanup pacman
 
   handlers:
     - name: cleanup pacman
+      become_user: aur
       shell: |
-        pacman -Scc --noconfirm && \
+        yay -Scc --noconfirm && \
         pacman -Qtdq | pacman -Rns - --noconfirm && \
         pacman -Qqd | pacman -Rsu - --noconfirm
       ignore_errors: true
-        
-
-- name: sysctl configuration
-  hosts: crib
-  become: yes
-  tasks:
-    - name: set ipv4
-      ansible.posix.sysctl:
-        name: "{{ item['name'] }}"
-        value: "{{ item['value'] }}"
-        sysctl_file: /etc/sysctl.d/01-ipv4.conf
-        sysctl_set: yes
-        reload: yes
-        state: present
-      with_items:
-        - { name: "net.ipv4.icmp_echo_ignore_broadcasts", value: 1 }
-        - { name: "net.ipv4.conf.all.accept_source_route", value: 0 }
-        - { name: "net.ipv4.conf.default.accept_source_route", value: 0 }
-        - { name: "net.ipv4.tcp_syncookies", value: 1 }
-        - { name: "net.ipv4.conf.default.accept_redirects", value: 0 }
-        - { name: "net.ipv4.conf.all.send_redirects", value: 0 }
-        - { name: "net.ipv4.conf.default.send_redirects", value: 0 }
-        - { name: "net.ipv4.conf.all.rp_filter", value: 1 }
-        - { name: "net.ipv4.conf.default.rp_filter", value: 1 }
-        - { name: "net.ipv4.conf.all.log_martians", value: 1 }
-        - { name: "net.ipv4.conf.default.log_martians", value: 1 }
-        - { name: "net.ipv4.ip_dynaddr", value: 2 }
-        - { name: "net.ipv4.tcp_ecn", value: 0 }
-        - { name: "net.ipv4.ip_forward", value: 1 }
-
-    - name: set ipv6
-      ansible.posix.sysctl:
-        name: "{{ item['name'] }}"
-        value: "{{ item['value'] }}"
-        sysctl_file: /etc/sysctl.d/02-ipv6.conf
-        sysctl_set: yes
-        reload: yes
-        state: present
-      with_items:
-        - { name: "net.ipv6.conf.all.disable_ipv6", value: 1 }
-        - { name: "net.ipv6.conf.default.disable_ipv6", value: 1 }
-
-    - name: enable sysrq
-      ansible.posix.sysctl:
-        name: kernel.sysrq
-        value: '1'
-        sysctl_file: /usr/lib/sysctl.d/50-default.conf
-        reload: false
-
-- name: modprobe configuration
-  hosts: crib
-  become: yes
-  tasks:
-    - name: blacklist ipv6
-      community.general.kernel_blacklist:
-        name: ipv6
-        state: present
-
-- name: udev configuration
-  hosts: crib
-  become: yes
-  tasks:
-    - name: copy over the rules
-      copy:
-        src: ./dir/etc/udev/rules.d/
-        dest: /etc/udev/rules.d
-        owner: root
-        group: root
-        mode: '0644'
-      notify: reload udev rules
-
-  handlers:
-    - name: reload udev rules
-      shell: |
-        udevadm control --reload-rules && \
-        udevadm trigger
-
-- name: configure systemd (systemd itself, not its components or other services)
-  hosts: crib
-  become: yes
-  tasks:
-    - name: copy over logind config
-      copy:
-        src: ./dir/etc/systemd/logind.conf
-        dest: /etc
-        owner: root
-        group: root
-        mode: '0644'
-      notify: restart elogind
-
-  handlers:
-    - name: restart elogind
-      systemd_service:
-        name: systemd-logind
-        state: restarted
-        enabled: true
 
 - name: configure networking
   hosts: crib
@@ -273,3 +258,141 @@
         systemd_networkd_enable_resolved: false
         systemd_networkd_symlink_resolv_conf: false
         systemd_networkd_manage_nsswitch_config: false
+
+- name: configure systemd (systemd itself, not its components or other services)
+  hosts: crib
+  become: yes
+  tasks:
+    - name: copy over logind config
+      copy:
+        src: ./dir/etc/systemd/logind.conf
+        dest: /etc
+        owner: root
+        group: root
+        mode: '0644'
+      notify: restart logind
+
+  handlers:
+    - name: restart logind
+      systemd_service:
+        name: systemd-logind
+        state: restarted
+        enabled: true
+
+- name: udev configuration
+  hosts: crib
+  become: yes
+  tasks:
+    - name: copy over the rules
+      copy:
+        src: ./dir/etc/udev/rules.d/
+        dest: /etc/udev/rules.d
+        owner: root
+        group: root
+        mode: '0644'
+      notify: reload udev rules
+
+  handlers:
+    - name: reload udev rules
+      shell: |
+        udevadm control --reload-rules && \
+        udevadm trigger
+
+- name: modprobe configuration
+  hosts: crib
+  become: yes
+  tasks:
+    - name: blacklist ipv6
+      community.general.kernel_blacklist:
+        name: ipv6
+        state: present
+      
+- name: sysctl configuration
+  hosts: crib
+  become: yes
+  tasks:
+    - name: set ipv4
+      ansible.posix.sysctl:
+        name: "{{ item['name'] }}"
+        value: "{{ item['value'] }}"
+        sysctl_file: /etc/sysctl.d/01-ipv4.conf
+        sysctl_set: yes
+        reload: yes
+        state: present
+      with_items:
+        - { name: "net.ipv4.icmp_echo_ignore_broadcasts", value: 1 }
+        - { name: "net.ipv4.conf.all.accept_source_route", value: 0 }
+        - { name: "net.ipv4.conf.default.accept_source_route", value: 0 }
+        - { name: "net.ipv4.tcp_syncookies", value: 1 }
+        - { name: "net.ipv4.conf.default.accept_redirects", value: 0 }
+        - { name: "net.ipv4.conf.all.send_redirects", value: 0 }
+        - { name: "net.ipv4.conf.default.send_redirects", value: 0 }
+        - { name: "net.ipv4.conf.all.rp_filter", value: 1 }
+        - { name: "net.ipv4.conf.default.rp_filter", value: 1 }
+        - { name: "net.ipv4.conf.all.log_martians", value: 1 }
+        - { name: "net.ipv4.conf.default.log_martians", value: 1 }
+        - { name: "net.ipv4.ip_dynaddr", value: 2 }
+        - { name: "net.ipv4.tcp_ecn", value: 0 }
+        - { name: "net.ipv4.ip_forward", value: 1 }
+
+    - name: set ipv6
+      ansible.posix.sysctl:
+        name: "{{ item['name'] }}"
+        value: "{{ item['value'] }}"
+        sysctl_file: /etc/sysctl.d/02-ipv6.conf
+        sysctl_set: yes
+        reload: yes
+        state: present
+      with_items:
+        - { name: "net.ipv6.conf.all.disable_ipv6", value: 1 }
+        - { name: "net.ipv6.conf.default.disable_ipv6", value: 1 }
+
+    - name: enable sysrq
+      ansible.posix.sysctl:
+        name: kernel.sysrq
+        value: '1'
+        sysctl_file: /usr/lib/sysctl.d/50-default.conf
+        reload: false
+
+- name: configure vim
+  hosts: crib
+  become: yes
+  vars:
+    dir: [ ['/root', 'root'], ['/home/mss', 'mss'] ]
+    subdir: [ 'backups', 'swaps' ]
+  tasks:
+    - name: copy over vim configuration
+      copy:
+        src: ./dir/etc/vimrc
+        dest: /etc
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: create directories
+      file:
+        path: "{{ item.0.0 }}/.config/vim/{{ item.1 }}"
+        owner: "{{ item.0.1 }}"
+        group: "{{ item.0.1 }}"
+        state: directory
+      loop: "{{ dir | product(subdir) | list }}"
+
+- name: configure x11
+  hosts: crib
+  become: yes
+  tasks:
+    - name: allow x11 to run as root
+      copy:
+        src: ./dir/etc/X11/Xwrapper.config
+        dest: /etc/X11
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: copy xorg-server config for host
+      copy:
+        src: "./dir/etc/X11/xorg.conf.d/01-{{ mss_hostname }}.conf"
+        dest: /etc/X11/xorg.conf.d
+        owner: root
+        group: root
+        mode: '0644'
