@@ -1,4 +1,13 @@
+---
 crib:
   hosts:
     desk1:
       ansible_host: 192.168.199.2
+
+want_docker:
+  hosts:
+    desk1:
+
+want_libvirt:
+  hosts:
+    desk1:
