@@ -425,7 +425,7 @@
         enabled: true
 
 - name: configure acpid
-  hosts: solitude
+  hosts: x230
   become: yes
   tasks:
     - name: copy over the acpid handler script
@@ -435,7 +435,7 @@
         owner: root
         group: root
         mode: '0644'
-      register: ntpd_copy
+      register: acpid_copy
 
     - name: set acpid state
       systemd_service:
