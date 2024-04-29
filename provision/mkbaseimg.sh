@@ -1,6 +1,4 @@
 #!/bin/bash
-set +e
-
 # - - check for root - - #
 if [ "$(id -u)" -ne 0 ]; then
     echo "E: need root big man."
@@ -16,7 +14,7 @@ POOLDIR="/mnt/mss/stuff/techy-bits/pools/setboxes"
 MOUNT="${PWD}/nbdmount"
 NBDDEV="/dev/nbd0"
 IMGNAME="loggedin.qcow2"
-IMGSIZE="10752M" # 10G + 512M
+IMGSIZE="10G"
 MIRROR='https://geo.mirror.pkgbuild.com/$repo/os/$arch'
 
 # - - create image and partitions - - #
@@ -25,9 +23,11 @@ modprobe nbd
 qemu-img create -f qcow2 "${IMGNAME}" "${IMGSIZE}"
 qemu-nbd --connect="${NBDDEV}" "${IMGNAME}"
 
-sgdisk --zap-all "${NBDDEV}"
-sgdisk -n1:0:+512M "${NBDDEV}"
-sgdisk -n2:0:0 "${NBDDEV}"
+sgdisk \
+    --zap-all \
+    --new=1:0:+512M \
+    --new=2:0:0     \
+    "${NBDDEV}"
 
 mkfs.fat -F 32 "${NBDDEV}"p1
 mkfs.ext4 "${NBDDEV}"p2 -L arch-rootfs
