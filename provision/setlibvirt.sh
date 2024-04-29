@@ -54,11 +54,21 @@ set_volumes(){
         if ! echo "${volinfo}" | grep "${volname}" >/dev/null 2>&1; then
             virsh vol-create --pool "${ORG_NAME}" --file "${volume}"
 
+            case "${volname}" in
+                gat)
+                    bm_size=25G
+                ;;
+                solitude)
+                    bm_size=10G
+                ;;
+            esac
+
             path_to_vol="$(grep path\> "${volume}" | grep "${volname}" \
                 | sed 's|<path>||g;s|</path>||g' | tr -d "[:space:]")"
 
             qemu-nbd --connect=/dev/nbd1 "${path_to_vol}"
-            parted /dev/nbd1 resizepart 2 100% -f -s
+            echo -e "d\n2\nn\n2\n\n+${bm_size}\nw\n" | fdisk /dev/nbd1
+            e2fsck -f -y /dev/nbd1p2
             resize2fs /dev/nbd1p2
             qemu-nbd --disconnect /dev/nbd1
         fi
