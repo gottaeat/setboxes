@@ -224,8 +224,8 @@
       become_user: aur
       shell: |
         yay -Scc --noconfirm && \
-        pacman -Qtdq | pacman -Rns - --noconfirm && \
-        pacman -Qqd | pacman -Rsu - --noconfirm
+        sudo pacman -Qtdq | sudo pacman -Rns - --noconfirm && \
+        sudo pacman -Qqd | sudo pacman -Rsu - --noconfirm
       ignore_errors: true
 
 - name: configure networking
