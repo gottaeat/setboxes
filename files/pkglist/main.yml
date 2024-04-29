@@ -86,6 +86,7 @@ mss_main_pkgs_base:
   - python-lxml
   - python-pip
   - python-pylint
+  - python-yaml
   - qbittorrent-nox
   - reaver
   - redshift
