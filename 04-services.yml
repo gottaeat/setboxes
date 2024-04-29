@@ -443,6 +443,21 @@
         state: "{{ 'restarted' if acpid_copy.changed else 'started' }}"
         enabled: true
 
+- name: configure thinkfan
+  hosts: x230
+  become: yes
+  tasks:
+    - name: baremetal check
+      stat:
+        path: /proc/acpi/ibm/fan
+      register: on_baremetal
+
+    - name: generate thinkfan config
+      script:
+        cmd: ./files/gen_thinkfan_conf.py
+        creates: /etc/thinkfan.conf
+      when: on_baremetal.stat.exists
+
 - name: bulk enable extra services
   hosts: crib
   become: yes
