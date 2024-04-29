@@ -53,6 +53,14 @@ set_volumes(){
         # gat
         if ! echo "${volinfo}" | grep "${volname}" >/dev/null 2>&1; then
             virsh vol-create --pool "${ORG_NAME}" --file "${volume}"
+
+            path_to_vol="$(grep path\> "${volume}" | grep "${volname}" \
+                | sed 's|<path>||g;s|</path>||g' | tr -d "[:space:]")"
+
+            qemu-nbd --connect=/dev/nbd1 "${path_to_vol}"
+            parted /dev/nbd1 resizepart 2 100% -f -s
+            resize2fs /dev/nbd1p2
+            qemu-nbd --disconnect /dev/nbd1
         fi
     done
 
@@ -75,6 +83,12 @@ set_doms(){
 }
 
 main(){
+    # - - check for root - - #
+    if [ "$(id -u)" -ne 0 ]; then
+        echo "E: need root big man."
+        exit 1
+    fi
+
     ORG_NAME="setboxes"
 
     set_network
