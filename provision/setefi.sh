@@ -22,7 +22,7 @@ _SWAPUUID="$(blkid -o export "$(mount | grep "${_SWAPMOUNT}" \
 _SWAPOFFS="$(filefrag -v "${_SWAPPATH}" \
     | awk '$1=="0:" {print substr($4, 1, length($4)-2)}')"
 
-_CMDLINE_RESUME="resume=${_SWAPUUID} resume_offset=${_SWAPOFFS}"
+_CMDLINE="${_CMDLINE} resume=${_SWAPUUID} resume_offset=${_SWAPOFFS}"
 
 # - - prints - - #
 pinfo "swap mount   → ${_SWAPMOUNT}"
