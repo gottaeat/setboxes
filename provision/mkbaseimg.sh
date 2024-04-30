@@ -1,8 +1,8 @@
 #!/bin/bash
-# - - check for root - - #
+. ./common
+
 if [ "$(id -u)" -ne 0 ]; then
-    echo "E: need root big man."
-    exit 1
+    perr "need root big man"
 fi
 
 # - - enter tmpdir - - #
