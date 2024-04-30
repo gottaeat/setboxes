@@ -237,8 +237,8 @@
             name: "{{ item.name }}"
             xml: '{{ lookup("file", item.xml) }}'
           with_items:
-            - { name: "gat", xml: "./virtxml/net_gat.xml" }
-            - { name: "cumvirt", xml: "./virtxml/net_cumvirt.xml" }
+            - { name: "gat", xml: "./files/virtxml/net_gat.xml" }
+            - { name: "cumvirt", xml: "./files/virtxml/net_cumvirt.xml" }
 
         - name: define pools
           community.libvirt.virt_pool:
@@ -246,9 +246,9 @@
             name: "{{ item.name }}"
             xml: '{{ lookup("file", item.xml) }}'
           with_items:
-            - { name: "cumvirt", xml: "./virtxml/pool_cumvirt.xml" }
-            - { name: "gat", xml: "./virtxml/pool_gat.xml" }
-            - { name: "iso", xml: "./virtxml/pool_iso.xml" }
+            - { name: "cumvirt", xml: "./files/virtxml/pool_cumvirt.xml" }
+            - { name: "gat", xml: "./files/virtxml/pool_gat.xml" }
+            - { name: "iso", xml: "./files/virtxml/pool_iso.xml" }
 
         - name: set network status
           community.libvirt.virt_net:
