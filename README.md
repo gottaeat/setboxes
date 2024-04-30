@@ -20,8 +20,21 @@ export ANSIBLE_DISPLAY_SKIPPED_HOSTS=false
 export ANSIBLE_DISPLAY_OK_HOSTS=false
 
 time ansible-playbook -i \
-    inventory.yml \
+    inv_vm.yml \
     --flush-cache \
     --ask-become-pass \
     01-initial_setup.yml 02-system_config.yml 03-mss_wares.yml 04-services.yml
+```
+
+### baremetal refresh
+```sh
+# run the playbooks against baremetal
+export ANSIBLE_DISPLAY_SKIPPED_HOSTS=false
+export ANSIBLE_DISPLAY_OK_HOSTS=false
+
+time ansible-playbook -i \
+    inv_bm.yml \
+    --flush-cache \
+    --ask-become-pass \
+    02-system_config.yml 03-mss_wares.yml 04-services.yml
 ```
