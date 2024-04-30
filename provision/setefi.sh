@@ -1,17 +1,10 @@
 #!/bin/bash
+. ./common
+
 set -e
 
-# - - handle - - #
-c_res="\033[0;39m"
-cb_grn="\033[1;32m"
-cb_red="\033[1;31m"
-
-perr(){ printf "${cb_red}ERR :${c_res} ${@}\n"; exit 1;}
-pinfo(){ printf "${cb_grn}INFO:${c_res} ${@}\n";}
-
-# - - check for root - - #
 if [ "$(id -u)" -ne 0 ]; then
-    perr "need root big man."
+    perr "need root big man"
 fi
 
 if [ -z "${1}" ]; then
