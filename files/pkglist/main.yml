@@ -3,6 +3,7 @@ mss_main_pkgs_base:
   - aircrack-ng
   - alsa-utils
   - android-tools
+  - arch-install-scripts
   - base
   - base-devel
   - bc
@@ -23,6 +24,7 @@ mss_main_pkgs_base:
   - gnu-netcat
   - go
   - gpm
+  - gptfdisk
   - hashcat
   - hashcat-utils
   - hcxtools
