@@ -100,7 +100,7 @@
             modification_time: preserve
             access_time: preserve
           when: not otg_vm_init.stat.exists
-      when: (not otg_on_baremetal.stat.exists and not otg_vm_init.stat.exists ) or ( otg_on_baremetal.stat.exists and installed_otg_hash != head_otg_hash )
+      when: (not otg_on_baremetal.stat.exists and not otg_vm_init.stat.exists ) or ( otg_on_baremetal.stat.exists and installed_otg_hash.stdout != head_otg_hash.stdout )
 
     # 7. post-install
     - name: set otg ownership
@@ -217,4 +217,4 @@
             modification_time: preserve
             access_time: preserve
           when: not nfqws_vm_init.stat.exists
-      when: (not nfqws_on_baremetal.stat.exists and not nfqws_vm_init.stat.exists ) or ( nfqws_on_baremetal.stat.exists and installed_nfqws_hash != head_nfqws_hash )
+      when: (not nfqws_on_baremetal.stat.exists and not nfqws_vm_init.stat.exists ) or ( nfqws_on_baremetal.stat.exists and installed_nfqws_hash.stdout != head_nfqws_hash.stdout )
