@@ -42,8 +42,6 @@
         - name: create mountpoints
           file:
             path: "/mnt/mss/{{ item }}"
-            owner: root
-            group: root
             state: directory
             recurse: true
           with_items:
@@ -353,13 +351,18 @@
         - { name: "net.ipv4.tcp_ecn", value: 0 }
         - { name: "net.ipv4.ip_forward", value: 1 }
 
+    - name: check ipv6 presence
+      stat:
+        path: /proc/sys/net/ipv6
+      register: ipv6_exists
+
     - name: set ipv6
       ansible.posix.sysctl:
         name: "{{ item['name'] }}"
         value: "{{ item['value'] }}"
         sysctl_file: /etc/sysctl.d/02-ipv6.conf
-        sysctl_set: yes
-        reload: yes
+        sysctl_set: "{{ 'true' if ipv6_exists.stat.exists else 'false' }}"
+        reload: "{{ 'true' if ipv6_exists.stat.exists else 'false' }}"
         state: present
       with_items:
         - { name: "net.ipv6.conf.all.disable_ipv6", value: 1 }
