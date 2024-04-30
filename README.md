@@ -15,7 +15,10 @@ cd ../
 # install collections and roles
 ansible-galaxy collection install -r requirements.yml
 
-# run the playbooks against the VMs
+# run the playbooks against the VMs, display only when things actually change
+export ANSIBLE_DISPLAY_SKIPPED_HOSTS=false
+export ANSIBLE_DISPLAY_OK_HOSTS=false
+
 time ansible-playbook -i \
     inventory.yml \
     --flush-cache \
