@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+
 set_network(){
     # create network
     if ! virsh net-list --name | grep "${ORG_NAME}" >/dev/null 2>&1; then
