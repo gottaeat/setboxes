@@ -71,6 +71,12 @@ echo -e "loggedin\nloggedin" | arch-chroot "${MOUNT}" /usr/bin/passwd "root"
 # - - resolv - - #
 echo "nameserver 1.1.1.1" > "${MOUNT}"/etc/resolv.conf
 
+# - - mounts - - #
+cat << EOF > "${MOUNT}"/etc/fstab
+/dev/vda2 / ext4 defaults,noatime 0 1
+/dev/vda1 /boot vfat defaults 0 0"
+EOF
+
 # - - pacman - - #
 rm -rfv "${MOUNT}/etc/pacman.d/gnupg/"
 
