@@ -1,0 +1,15 @@
+---
+crib:
+  hosts:
+    desk1:
+      ansible_host: gat
+    x230:
+      ansible_host: solitude
+
+want_docker:
+  hosts:
+    desk1:
+
+want_libvirt:
+  hosts:
+    desk1:
