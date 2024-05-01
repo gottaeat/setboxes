@@ -1,0 +1,67 @@
+#!/usr/bin/nft -f
+flush ruleset
+
+# physical
+define PPP_MASTER_IFACE = wan
+define WAN_IFACE = ppp0
+define LAN_IFACE = lan
+
+# vpn
+define VPN_UDP_IFACE = lichen
+
+# netns
+define DOCKER_IFACE = docker0
+define DOCKER_NS_IFACE_IP = 10.0.100.1
+
+# groups
+define NETNS_IF = { $DOCKER_IFACE }
+define VPN_IF = { $VPN_UDP_IFACE }
+
+# table
+table ip ashtray {
+    # FILTER<-INPUT
+    chain input {
+        type filter hook input priority filter; policy drop;
+        iifname "lo" counter accept
+        ct state established,related counter accept
+        iifname $LAN_IFACE counter accept
+        iifname $NETNS_IF counter accept
+        iifname $VPN_IF counter accept
+        iifname $WAN_IFACE icmp type echo-request counter accept
+    }
+
+    # FILTER<-FORWARD (filter)
+    chain filter_forward {
+        type filter hook forward priority filter; policy drop;
+        ct state established,related counter accept
+        iifname $LAN_IFACE counter accept
+        iifname $NETNS_IF counter accept
+        iifname $VPN_IF counter accept
+        iifname $WAN_IFACE oifname { $PPP_MASTER_IFACE, $NETNS_IF } counter accept
+    }
+
+    # FILTER<-FORWARD (mangle)
+    chain mangle_forward {
+        type filter hook forward priority mangle; policy accept;
+        iifname { $WAN_IFACE, $VPN_IF } tcp flags syn tcp option maxseg size set rt mtu counter
+        oifname { $WAN_IFACE, $VPN_IF } tcp flags syn tcp option maxseg size set rt mtu counter
+    }
+
+    # FILTER<-OUTPUT
+    chain output {
+        type filter hook output priority filter; policy accept;
+    }
+
+    # NAT<-POSTROUTING
+    chain postrouting {
+        type nat hook postrouting priority srcnat; policy accept;
+        iifname $LAN_IFACE oifname $WAN_IFACE counter masquerade
+        iifname $NETNS_IF oifname { $WAN_IFACE, $VPN_IF } counter masquerade
+        iifname $VPN_IF oifname $WAN_IFACE counter masquerade
+    }
+
+    # NAT<-PREROUTING
+    chain prerouting {
+        type nat hook prerouting priority dstnat; policy accept;
+    }
+}
