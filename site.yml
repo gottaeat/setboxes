@@ -399,6 +399,13 @@
         state: directory
       loop: "{{ dir | product(subdir) | list }}"
 
+    - name: symlink vi to vim
+      file:
+        src: "/usr/bin/vim"
+        dest: "/usr/bin/vi"
+        state: link
+        force: yes
+
 - name: configure x11
   hosts: crib
   become: yes
