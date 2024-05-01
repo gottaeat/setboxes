@@ -1,0 +1,12 @@
+<volume>
+    <name>ashtray.qcow2</name>
+    <capacity unit="G">11</capacity>
+    <target>
+        <path>/mnt/mss/stuff/techy-bits/pools/setboxes/ashtray.qcow2</path>
+        <format type="qcow2" />
+    </target>
+    <backingStore>
+        <path>/mnt/mss/stuff/techy-bits/pools/setboxes/loggedin.qcow2</path>
+        <format type="qcow2" />
+    </backingStore>
+</volume>
