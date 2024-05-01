@@ -1,6 +1,4 @@
 #!/bin/bash
-. ./common
-
 set -e
 
 set_network(){
@@ -97,9 +95,10 @@ set_doms(){
 }
 
 main(){
-    if [ "$(id -u)" -ne 0 ]; then
-        perr "need root big man"
-    fi
+    . ./common
+
+    rootcheck
+    nbdcheck
 
     ORG_NAME="setboxes"
 
