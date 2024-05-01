@@ -2,8 +2,6 @@
 remote_user: mss
 ansible_user: mss
 ansible_port: 3131
-mss_otg_path: /mnt/mss/stuff/techy-bits/git/mss-otg
-mss_nfqws_path: /mnt/mss/stuff/techy-bits/git/mss-nfqws
 mss_groups_base:
   - adm
   - audio
