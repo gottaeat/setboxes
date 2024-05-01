@@ -1,16 +1,10 @@
-# 1. check if we're on baremetal
-- name: check if baremetal path exists
-  stat:
-    path: "{{ baremetal_path }}"
-  register: on_baremetal
-
-# 2. check if vm init was done
+# 1. check if vm init was done
 - name: check if vm init was done
   stat:
     path: "/var/lib/mss_ansible/{{ project_name }}_vm_init"
   register: vm_init
 
-# 3. we are in the vm, clone the repo
+# 2. we are in the vm, clone the repo
 - name: vm pre-install
   block:
     - name: set project path
@@ -23,9 +17,9 @@
         dest: "{{ project_path }}"
         depth: 1
         recursive: yes
-  when: not on_baremetal.stat.exists and not vm_init.stat.exists
+  when: in_vm and not vm_init.stat.exists
 
-# 4. we are on baremetal
+# 3. we are on baremetal
 - name: baremetal pre-install
   block:
     - name: set nfqws-path
@@ -42,9 +36,9 @@
         - name: decode the hash
           set_fact:
             installed_hash: "{{ commit_hash_b64['content'] | b64decode }}"
-  when: on_baremetal.stat.exists
+  when: not in_vm
 
-# 5. read the HEAD commit hash
+# 4. read the HEAD commit hash
 - name: read the hash of the head
   shell:
     chdir: "{{ project_path }}"
@@ -52,9 +46,9 @@
        git rev-parse --short HEAD
   register: head_hash
   changed_when: false
-  when: on_baremetal.stat.exists or not vm_init.stat.exists
+  when: not in_vm or not vm_init.stat.exists
 
-# 6. install when:
+# 5. install when:
 #  a. we are in the vm and we never installed mss-nfqws
 #  b. we are on baremetal and the installed hash does not match the HEAD
 - name: build project
@@ -87,4 +81,4 @@
         modification_time: preserve
         access_time: preserve
       when: not vm_init.stat.exists
-  when: (not on_baremetal.stat.exists and not vm_init.stat.exists ) or ( on_baremetal.stat.exists and installed_hash.stdout != head_hash.stdout )
+  when: ( in_vm and not vm_init.stat.exists ) or ( not in_vm and installed_hash.stdout != head_hash.stdout )
