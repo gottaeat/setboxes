@@ -282,7 +282,7 @@
     - name: copy over logind config
       copy:
         src: ./dir/etc/systemd/logind.conf
-        dest: /etc
+        dest: /etc/systemd
         owner: root
         group: root
         mode: '0644'
