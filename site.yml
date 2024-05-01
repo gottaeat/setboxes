@@ -276,7 +276,7 @@
         systemd_networkd_symlink_resolv_conf: false
         systemd_networkd_manage_nsswitch_config: false
 
-- name: configure systemd (systemd itself, not its components or other services)
+- name: configure systemd-logind
   hosts: crib
   become: yes
   tasks:
@@ -407,7 +407,7 @@
         force: yes
 
 - name: configure x11
-  hosts: crib
+  hosts: want_multimedia
   become: yes
   tasks:
     - name: allow x11 to run as root
@@ -450,7 +450,7 @@
         build_dir: "utils/build"
 
 - name: build landfill
-  hosts: crib
+  hosts: want_multimedia
   become: yes
   tasks:
     - include_tasks: ./files/handle_meson.yml
@@ -498,6 +498,25 @@
         force: true
         follow: false
       with_items: "{{ mss_wireguard_ifaces }}"
+      register: wg_config_link
+
+    - name: set wireguard state
+      block:
+        - name: just enable if in vm
+          systemd_service:
+            name: "wg-quick@{{ item }}"
+            enabled: true
+          with_items: "{{ mss_wireguard_ifaces }}"
+          when: in_vm
+
+        - name: if not in vm, alter state
+          systemd_service:
+            name: "wg-quick@{{ item }}"
+            state: "{{ 'restarted' if wg_config_link.changed else 'started'}}"
+            enabled: true
+          with_items: "{{ mss_wireguard_ifaces }}"
+          when: not in_vm
+      when: is_router
 
 - name: configure bind
   hosts: crib
@@ -744,7 +763,7 @@
           when: on_baremetal.stat.exists
 
 - name: configure pulseaudio
-  hosts: crib
+  hosts: want_multimedia
   become: yes
   tasks:
     # need to take a reboot for this normally, but this file never changes and
@@ -826,7 +845,7 @@
         enabled: true
 
 - name: configure mpd
-  hosts: crib
+  hosts: want_multimedia
   become: yes
   tasks:
     - name: copy over mpd config
@@ -907,7 +926,7 @@
         enabled: true
 
 - name: configure thinkfan
-  hosts: x230
+  hosts: thinkpad
   become: yes
   tasks:
     - name: baremetal check
