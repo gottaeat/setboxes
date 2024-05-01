@@ -1,0 +1,90 @@
+# 1. check if we're on baremetal
+- name: check if baremetal path exists
+  stat:
+    path: "{{ baremetal_path }}"
+  register: on_baremetal
+
+# 2. check if vm init was done
+- name: check if vm init was done
+  stat:
+    path: "/var/lib/mss_ansible/{{ project_name }}_vm_init"
+  register: vm_init
+
+# 3. we are in the vm, clone the repo
+- name: vm pre-install
+  block:
+    - name: set project path
+      set_fact:
+        project_path: "/tmp/{{ project_name }}"
+
+    - name: clone project
+      git:
+        repo: "{{ project_url }}"
+        dest: "{{ project_path }}"
+        depth: 1
+        recursive: yes
+  when: not on_baremetal.stat.exists and not vm_init.stat.exists
+
+# 4. we are on baremetal
+- name: baremetal pre-install
+  block:
+    - name: set nfqws-path
+      set_fact:
+        project_path: "{{ baremetal_path }}"
+
+    - name: read the hash of the installed nfqws
+      block:
+        - name: slurp the project commit file
+          slurp:
+            src: "/var/lib/mss_ansible/{{ project_name }}_commit"
+          register: commit_hash_b64
+
+        - name: decode the hash
+          set_fact:
+            installed_hash: "{{ commit_hash_b64['content'] | b64decode }}"
+  when: on_baremetal.stat.exists
+
+# 5. read the HEAD commit hash
+- name: read the hash of the head
+  shell:
+    chdir: "{{ project_path }}"
+    cmd: |
+       git rev-parse --short HEAD
+  register: head_hash
+  changed_when: false
+  when: on_baremetal.stat.exists or not vm_init.stat.exists
+
+# 6. install when:
+#  a. we are in the vm and we never installed mss-nfqws
+#  b. we are on baremetal and the installed hash does not match the HEAD
+- name: build project
+  block:
+    - name: create build directory
+      file:
+        path: "{{ project_path }}/{{ build_dir }}"
+        state: directory
+
+    - name: build and install project
+      shell:
+        chdir: "{{ project_path }}/{{ build_dir }}"
+        cmd: |
+          meson setup ../ && ninja && ninja install
+
+    - name: remove build artifacts
+      file:
+        path: "{{ project_path }}/{{ build_dir }}"
+        state: absent
+
+    - name: update the hash
+      copy:
+        content: "{{ head_hash }}"
+        dest: "/var/lib/mss_ansible/{{ project_name }}_commit"
+
+    - name: set vm_init
+      file:
+        path: "/var/lib/mss_ansible/{{ project_name }}_init"
+        state: touch
+        modification_time: preserve
+        access_time: preserve
+      when: not vm_init.stat.exists
+  when: (not on_baremetal.stat.exists and not vm_init.stat.exists ) or ( on_baremetal.stat.exists and installed_hash.stdout != head_hash.stdout )
