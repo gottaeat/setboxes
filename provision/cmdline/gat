@@ -2,11 +2,11 @@
 _SWAPMOUNT="/mnt/mss/stuff"
 _SWAPPATH="/mnt/mss/stuff/techy-bits/swapfile"
 
-_CMDLINE="initrd=\amd-ucode.img initrd=\initramfs-linux-zen.img"
-_CMDLINE="${_CMDLINE} cryptdevice=/dev/sda2:cryptlvm root=/dev/arch/rootfs"
-_CMDLINE="${_CMDLINE} rw mitigations=off"
-_CMDLINE="${_CMDLINE} net.ifnames=0"
-_CMDLINE="${_CMDLINE} ipv6.disable=1"
-_CMDLINE="${_CMDLINE} preempt=full"
-_CMDLINE="${_CMDLINE} amd_pstate=active"
-_CMDLINE="${_CMDLINE} cpufreq.default_governor=performance"
+_CMDLINE='initrd=\amd-ucode.img initrd=\initramfs-linux-zen.img'
+_CMDLINE+=' cryptdevice=/dev/sda2:cryptlvm root=/dev/arch/rootfs'
+_CMDLINE+=' rw mitigations=off'
+_CMDLINE+=' net.ifnames=0'
+_CMDLINE+=' ipv6.disable=1'
+_CMDLINE+=' preempt=full'
+_CMDLINE+=' amd_pstate=active'
+_CMDLINE+=' cpufreq.default_governor=performance'

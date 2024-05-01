@@ -2,14 +2,13 @@
 _SWAPMOUNT="/mnt/mss/stuff"
 _SWAPPATH="/mnt/mss/stuff/techy-bits/swapfile"
 
-_CMDLINE="initrd=\intel-ucode.img initrd=\initramfs-linux-zen.img"
-_CMDLINE="${_CMDLINE} cryptdevice=/dev/sda2:cryptlvm root=/dev/arch/rootfs"
-_CMDLINE="${_CMDLINE} rw mitigations=off"
-_CMDLINE="${_CMDLINE} net.ifnames=0"
-_CMDLINE="${_CMDLINE} ipv6.disable=1"
-_CMDLINE="${_CMDLINE} preempt=full"
-_CMDLINE="${_CMDLINE} cpufreq.default_governor=schedutil"
-_CMDLINE="${_CMDLINE} iwlwifi.11n_disable=1 iwlwifi.power_save=0"
-_CMDLINE="${_CMDLINE} acpi_osi=\"\!Windows 2012\""
-_CMDLINE="${_CMDLINE} thinkpad_acpi.fan_control=1"
-_CMDLINE="$(echo ${_CMDLINE} | sed 's|\\!|!|g')"
+_CMDLINE='initrd=\intel-ucode.img initrd=\initramfs-linux-zen.img'
+_CMDLINE+=' cryptdevice=/dev/sda2:cryptlvm root=/dev/arch/rootfs'
+_CMDLINE+=' rw mitigations=off'
+_CMDLINE+=' net.ifnames=0'
+_CMDLINE+=' ipv6.disable=1'
+_CMDLINE+=' preempt=full'
+_CMDLINE+=' cpufreq.default_governor=schedutil'
+_CMDLINE+=' iwlwifi.11n_disable=1 iwlwifi.power_save=0'
+_CMDLINE+=' acpi_osi=!Windows 2012'
+_CMDLINE+=' thinkpad_acpi.fan_control=1'
