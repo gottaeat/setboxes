@@ -1,9 +1,7 @@
 #!/bin/bash
 . ./common
 
-if [ "$(id -u)" -ne 0 ]; then
-    perr "need root big man"
-fi
+rootcheck
 
 # - - enter tmpdir - - #
 TMPDIR="$(mktemp -d ./my_temp_dir_XXXXXX)"
@@ -18,7 +16,7 @@ IMGSIZE="10G"
 MIRROR='https://geo.mirror.pkgbuild.com/$repo/os/$arch'
 
 # - - create image and partitions - - #
-modprobe nbd
+nbdcheck
 
 qemu-img create -f qcow2 "${IMGNAME}" "${IMGSIZE}"
 qemu-nbd --connect="${NBDDEV}" "${IMGNAME}"
