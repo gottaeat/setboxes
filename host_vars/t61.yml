@@ -1,0 +1,9 @@
+---
+is_router: true
+mss_hostname: ashtray
+mss_fstab_extra: |
+  /dev/sda1 /boot ext4 defaults 0 0
+mss_wireguard_ifaces:
+  - lichen
+mss_main_pkgs_extra:
+mss_user_pkgs_extra:
