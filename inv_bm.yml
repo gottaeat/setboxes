@@ -1,10 +1,21 @@
 ---
+all:
+  vars:
+    in_vm: false
+
 crib:
   hosts:
     desk1:
-      ansible_host: gat
+      ansible_host: 192.168.199.2
     x230:
-      ansible_host: solitude
+      ansible_host: 192.168.199.3
+    t61:
+      ansible_host: 192.168.199.4
+
+want_multimedia:
+  hosts:
+    desk1:
+    x230:
 
 want_docker:
   hosts:
@@ -13,3 +24,8 @@ want_docker:
 want_libvirt:
   hosts:
     desk1:
+
+thinkpad:
+  hosts:
+    x230:
+    t61:
