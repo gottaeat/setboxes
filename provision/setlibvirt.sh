@@ -63,6 +63,9 @@ set_volumes(){
                 solitude)
                     bm_size=10G
                 ;;
+                ashtray)
+                    bm_size=10G
+                ;;
             esac
 
             path_to_vol="$(grep path\> "${volume}" | grep "${volname}" \
