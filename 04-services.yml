@@ -434,7 +434,7 @@
         dest: /etc/acpi
         owner: root
         group: root
-        mode: '0644'
+        mode: '0755'
       register: acpid_copy
 
     - name: set acpid state
