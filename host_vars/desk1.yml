@@ -1,4 +1,5 @@
 ---
+is_router: false
 mss_hostname: gat
 mss_fstab_extra: |
   /dev/sda1 /boot vfat defaults 0 0
