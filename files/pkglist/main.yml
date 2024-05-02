@@ -1,35 +1,19 @@
 ---
-mss_main_pkgs_base:
-  - aircrack-ng
-  - alsa-utils
-  - android-tools
+main_pkgs_base:
   - arch-install-scripts
   - base
   - base-devel
   - bc
-  - bettercap
   - bind
-  - bully
-  - clinfo
   - diffutils
   - dosfstools
-  - dsniff
   - fdupes
-  - feh
-  - ffmpeg
-  - fontconfig
-  - freetype2
-  - gimp
   - git
   - gnu-netcat
   - go
   - gpm
   - gptfdisk
-  - hashcat
-  - hashcat-utils
-  - hcxtools
   - htop
-  - imagemagick
   - inetutils
   - iptables-nft
   - irssi
@@ -37,36 +21,22 @@ mss_main_pkgs_base:
   - jq
   - kernel-modules-hook
   - libcap
-  - libinput
   - libmnl
   - libnetfilter_queue
   - libnfnetlink
-  - libreoffice-fresh
-  - libx11
-  - libxft
-  - libxinerama
-  - libxrender
   - links
   - linux-firmware
   - linux-zen
   - lsof
   - lvm2
-  - maim
   - man-db
   - masscan
   - meson
   - mpc
-  - mpd
-  - mpv
   - mtr
-  - mumble
-  - mupdf
-  - ncmpcpp
   - neofetch
   - netperf
-  - networkmanager
   - nmap
-  - noto-fonts-emoji
   - ntp
   - openssh
   - openvpn
@@ -74,27 +44,16 @@ mss_main_pkgs_base:
   - pacman-contrib
   - partclone
   - patchelf
-  - pavucontrol
-  - perl-image-exiftool
-  - picom
-  - pixiewps
-  - pocl
   - profanity
   - proxychains-ng
-  - pulseaudio
-  - pulseaudio-alsa
   - python
   - python-black
   - python-lxml
   - python-pip
   - python-pylint
   - python-yaml
-  - qbittorrent-nox
-  - reaver
-  - redshift
   - rsync
   - samurai
-  - signal-desktop
   - smartmontools
   - sshfs
   - strace
@@ -102,12 +61,9 @@ mss_main_pkgs_base:
   - terminus-font
   - tmux
   - tor
-  - ttf-croscore
-  - ttf-sazanami
   - udp2raw
   - unrar
   - unzip
-  - v4l-utils
   - vifm
   - vim
   - vnstat
@@ -115,6 +71,39 @@ mss_main_pkgs_base:
   - wget
   - whois
   - wireguard-tools
+
+main_pkgs_multimedia:
+  - alsa-utils
+  - feh
+  - ffmpeg
+  - fontconfig
+  - freetype2
+  - gimp
+  - imagemagick
+  - libinput
+  - libreoffice-fresh
+  - libx11
+  - libxft
+  - libxinerama
+  - libxrender
+  - maim
+  - mpd
+  - mpv
+  - mumble
+  - mupdf
+  - ncmpcpp
+  - noto-fonts-emoji
+  - pavucontrol
+  - perl-image-exiftool
+  - picom
+  - pulseaudio
+  - pulseaudio-alsa
+  - qbittorrent-nox
+  - redshift
+  - signal-desktop
+  - ttf-croscore
+  - ttf-sazanami
+  - v4l-utils
   - wireshark-qt
   - xclip
   - xf86-input-libinput
@@ -132,3 +121,27 @@ mss_main_pkgs_base:
   - xorg-xsetroot
   - xtrlock
   - yt-dlp
+
+main_pkgs_desktop_extra:
+  - android-tools
+  - networkmanager
+
+main_pkgs_router:
+  - dhcp
+  - ppp
+
+main_pkgs_bios:
+  - grub
+
+main_pkgs_wlan_tools:
+  - aircrack-ng
+  - bettercap
+  - bully
+  - clinfo
+  - dsniff
+  - hashcat
+  - hashcat-utils
+  - hcxtools
+  - pixiewps
+  - pocl
+  - reaver
