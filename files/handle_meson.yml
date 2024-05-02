@@ -81,4 +81,6 @@
         modification_time: preserve
         access_time: preserve
       when: not vm_init.stat.exists
-  when: ( in_vm and not vm_init.stat.exists ) or ( not in_vm and installed_hash.stdout != head_hash.stdout )
+  when: >-
+    ( in_vm and not vm_init.stat.exists ) or
+    ( not in_vm and installed_hash.stdout != head_hash.stdout )
