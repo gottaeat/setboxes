@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+
 . ./common
 
 rootcheck
@@ -142,8 +144,8 @@ fstrim --verbose "${MOUNT}"
 fstrim --verbose "${MOUNT}/boot"
 
 # - - unmount - - #
-pkill gpg-agent
-umount --recursive "${MOUNT}"
+umount "${NBDDEV}"p1
+umount "${NBDDEV}"p2
 qemu-nbd --disconnect "${NBDDEV}"
 
 # - - send to pool - - #
