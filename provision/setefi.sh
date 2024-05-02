@@ -4,7 +4,7 @@ set -e
 calc_resume(){
     _SWAPUUID="$(blkid -o export "$(mount | grep "${_SWAPMOUNT}" \
         | awk '{print $1}')" \
-        | awk '/UUID/{sub(/UUID=/,""); print}')"
+        | awk '/UUID/{print}')"
 
     _SWAPOFFS="$(filefrag -v "${_SWAPPATH}" \
         | awk '$1=="0:" {print substr($4, 1, length($4)-2)}')"
