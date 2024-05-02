@@ -459,6 +459,61 @@
         build_dir: "landfill/build"
 
 # - - services - - #
+- name: configure pppd
+  hosts: routers
+  become: yes
+  vars_files:
+    - ./files/router.yml
+  tasks:
+    - name: template and copy over pap-secrets
+      template:
+        src: ./dir/etc/ppp/pap-secrets.j2
+        dest: /etc/ppp/pap-secrets
+        owner: root
+        group: root
+        mode: '0600'
+      register: secret_copy
+
+    - name: template and copy over isp peer config
+      template:
+        src: ./dir/etc/ppp/peers/isp.j2
+        dest: /etc/ppp/peers/isp
+        owner: root
+        group: root
+        mode: '0644'
+      register: isp_copy
+
+    - name: copy over options
+      copy:
+        src: ./dir/etc/ppp/options
+        dest: /etc/ppp
+        owner: root
+        group: root
+        mode: '0644'
+      register: ppp_opts_copy
+
+    - name: set pppd state
+      block:
+        - name: enabled by default
+          systemd_service:
+            name: ppp@isp
+            enabled: true
+
+        - name: triggers
+          systemd_service:
+            name: ppp@isp
+            state:
+              "{{ \
+                'restarted' if \
+                  secret_copy.changed or \
+                  isp_copy.changed or \
+                  ppp_opts_copy.changed or \
+                else \
+                  'started' \
+              }}"
+            enabled: true
+          when: not in_vm
+
 - name: configure systemd-logind
   hosts: crib
   become: yes
