@@ -1,13 +1,11 @@
 ---
-is_router: false
 mss_hostname: gat
 mss_fstab_extra: |
   /dev/sda1 /boot vfat defaults 0 0
 mss_wireguard_ifaces:
   - lichen
-mss_main_pkgs_extra:
+main_pkgs_extra:
   - aarch64-linux-gnu-gcc
-  - acpid
   - amd-ucode
   - ansible
   - arm-none-eabi-gcc
@@ -51,7 +49,7 @@ mss_main_pkgs_extra:
   - wine-mono
   - winetricks
   - xf86-video-amdgpu
-mss_user_pkgs_extra:
+user_pkgs_extra:
   - dynamips
   - gns3-gui
   - gns3-server
