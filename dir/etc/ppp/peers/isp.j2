@@ -1,0 +1,17 @@
+plugin pppoe.so
+
+wan
+name "{{ pap_user }}"
+hide-password
+
+persist
+debug
+
+defaultroute
+noipdefault
+
+noauth
+noaccomp
+
+lcp-echo-interval 20
+lcp-echo-failure 3
