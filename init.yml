@@ -1,4 +1,62 @@
 ---
+- name: convert the boot partition to ext4 for mbr hosts
+  hosts: bios
+  vars:
+    - ansible_user: root
+    - ansible_password: loggedin
+    - ansible_port: 22
+  tasks:
+    - name: get fstype for /boot
+      set_fact:
+        boot_fstype: "{{ item.fstype }}"
+      loop: "{{ hostvars[inventory_hostname].ansible_mounts }}"
+      loop_control:
+        label: "{{ item.mount }}"
+      when: item.mount == "/boot"
+
+    - name: convert /boot to ext4
+      block:
+        - name: clean /boot contents of efi
+          file:
+            path: "/boot/{{ item }}"
+            state: absent
+          with_items:
+            - "EFI"
+            - "grub"
+
+        - name: store contents of /boot to /tmp/boot
+          copy:
+            src: /boot
+            dest: /tmp/
+            remote_src: true
+
+        - name: unmount /boot
+          ansible.posix.mount:
+            path: /boot
+            state: unmounted
+
+        - name: mkfs.ext4 /dev/vda1
+          community.general.filesystem:
+            fstype: ext4
+            dev: /dev/vda1
+            opts: "-L arch-boot"
+            force: true
+
+        - name: mount /dev/vda1 to /boot
+          ansible.posix.mount:
+            path: /boot
+            src: /dev/vda1
+            fstype: ext4
+            opts: defaults,noatime
+            state: ephemeral
+
+        - name: copy over /tmp/boot
+          copy:
+            src: /tmp/boot/
+            dest: /boot
+            remote_src: true
+      when: boot_fstype == "vfat"
+
 - name: set accounts and configure sshd before user handoff
   hosts: crib
   vars:
