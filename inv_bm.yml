@@ -12,22 +12,13 @@ crib:
     t61:
       ansible_host: ashtray
 
-want_multimedia:
+desktops:
   hosts:
     desk1:
     x230:
 
-want_docker:
+routers:
   hosts:
-    desk1:
-
-want_libvirt:
-  hosts:
-    desk1:
-
-thinkpad:
-  hosts:
-    x230:
     t61:
 
 bios:
