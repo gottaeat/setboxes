@@ -708,7 +708,7 @@
         path: /etc/rndc.key
         owner: root
         group: named
-        mode: '0640'
+        mode: '0644'
 
     - name: set named state
       block:
@@ -730,6 +730,34 @@
                   'started' \
               }}"
             enabled: true
+
+- name: configure isc dhcpd(v4)
+  hosts: routers
+  become: yes
+  tasks:
+    - name: configure dhcpd4
+      copy:
+        src: ./dir/etc/dhcpd.conf
+        dest: /etc
+        owner: root
+        group: root
+        mode: '0644'
+      register: dhcpdconf_copy
+
+    - name: set dhcpd status
+      block:
+        - name: enabled by default
+          systemd_service:
+            name: dhcpd4
+            enabled: true
+
+        - name: triggers
+          systemd_service:
+            name: dhcpd4
+            state:
+              "{{ 'restarted' if dhcpdconf_copy.changed else 'started' }}"
+            enabled: true
+          when: not in_vm
 
 - name: configure docker
   hosts: crib
