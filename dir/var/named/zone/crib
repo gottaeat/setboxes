@@ -1,0 +1,5 @@
+$TTL 5M
+@ IN SOA crib. root.crib. ( 1 1W 1D 4W 1W )
+@ IN NS ashtray.crib.
+ashtray IN A 10.13.37.1
+lichen  IN A 10.13.37.2

@@ -1,0 +1,5 @@
+$TTL 5M
+@ IN SOA crib. root.crib. ( 1 1W 1D 4W 1W )
+@ IN NS ashtray.crib.
+1 IN PTR ashtray.crib.
+2 IN PTR lichen.crib.
