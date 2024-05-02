@@ -6,11 +6,11 @@ all:
 crib:
   hosts:
     desk1:
-      ansible_host: 192.168.199.2
+      ansible_host: gat
     x230:
-      ansible_host: 192.168.199.3
+      ansible_host: solitude
     t61:
-      ansible_host: 192.168.199.4
+      ansible_host: ashtray
 
 want_multimedia:
   hosts:
@@ -28,4 +28,8 @@ want_libvirt:
 thinkpad:
   hosts:
     x230:
+    t61:
+
+bios:
+  hosts:
     t61:

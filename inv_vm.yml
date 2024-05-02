@@ -29,3 +29,7 @@ thinkpad:
   hosts:
     x230:
     t61:
+
+bios:
+  hosts:
+    t61:
