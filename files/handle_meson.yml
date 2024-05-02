@@ -76,7 +76,7 @@
 
     - name: set vm_init
       file:
-        path: "/var/lib/mss_ansible/{{ project_name }}_init"
+        path: "/var/lib/mss_ansible/{{ project_name }}_vm_init"
         state: touch
         modification_time: preserve
         access_time: preserve
