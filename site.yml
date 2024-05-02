@@ -67,7 +67,7 @@
 
 - name: pacman and mkinitcpio configuration
   hosts: crib
-  become: yes
+  become: true
   tasks:
     - name: copy over vconsole.conf # change should trigger a initramfs rebuild
       copy:
@@ -122,15 +122,33 @@
             mode: '0644'
       when: not sourceme_build_state.stat.exists
 
-- name: handle aur
+- name: handle packages
   hosts: crib
-  become: yes
+  become: true
   vars_files:
     - files/pkglist/main.yml
     - files/pkglist/user.yml
   vars:
-    pkgs: "{{ (mss_user_pkgs_base + mss_user_pkgs_extra + mss_main_pkgs_base + mss_main_pkgs_extra) }}"
+    pkgs: "{{ (main_pkgs_base + user_pkgs_base + main_pkgs_extra + user_pkgs_extra) }}"
+    desktop_pkgs: "{{ (main_pkgs_multimedia + main_pkgs_desktop_extra + main_pkgs_wlan_tools) }}"
   tasks:
+    - name: resolve package list
+      block:
+        - name: handle desktops group
+          set_fact:
+            pkgs: "{{ (pkgs + desktop_pkgs ) }}"
+          when: "'desktops' in group_names"
+
+        - name: handle routers group
+          set_fact:
+            pkgs: "{{ (pkgs + main_pkgs_router) }}"
+          when: "'routers' in group_names"
+
+        - name: handle bios group
+          set_fact:
+            pkgs: "{{ (pkgs + main_pkgs_bios)}}"
+          when: "'bios' in group_names"
+
     - name: create aur user
       user:
         name: aur
@@ -228,7 +246,7 @@
       ignore_errors: true
 
 - name: configure networking
-  hosts: crib
+  hosts: desktops
   become: yes
   pre_tasks:
     - name: copy over networkmanager configuration
@@ -275,26 +293,6 @@
         systemd_networkd_enable_resolved: false
         systemd_networkd_symlink_resolv_conf: false
         systemd_networkd_manage_nsswitch_config: false
-
-- name: configure systemd-logind
-  hosts: crib
-  become: yes
-  tasks:
-    - name: copy over logind config
-      copy:
-        src: ./dir/etc/systemd/logind.conf
-        dest: /etc/systemd
-        owner: root
-        group: root
-        mode: '0644'
-      notify: restart logind
-
-  handlers:
-    - name: restart logind
-      systemd_service:
-        name: systemd-logind
-        state: restarted
-        enabled: true
 
 - name: udev configuration
   hosts: crib
@@ -407,7 +405,7 @@
         force: yes
 
 - name: configure x11
-  hosts: want_multimedia
+  hosts: desktops
   become: yes
   tasks:
     - name: allow x11 to run as root
@@ -450,7 +448,7 @@
         build_dir: "utils/build"
 
 - name: build landfill
-  hosts: want_multimedia
+  hosts: desktops
   become: yes
   tasks:
     - include_tasks: ./files/handle_meson.yml
@@ -461,6 +459,26 @@
         build_dir: "landfill/build"
 
 # - - services - - #
+- name: configure systemd-logind
+  hosts: crib
+  become: yes
+  tasks:
+    - name: copy over logind config
+      copy:
+        src: ./dir/etc/systemd/logind.conf
+        dest: /etc/systemd
+        owner: root
+        group: root
+        mode: '0644'
+      notify: restart logind
+
+  handlers:
+    - name: restart logind
+      systemd_service:
+        name: systemd-logind
+        state: restarted
+        enabled: true
+
 - name: configure nftables
   hosts: crib
   become: yes
@@ -472,19 +490,26 @@
         owner: root
         group: root
         mode: '0700'
-      notify: restart nftables
+      register: nftables_copy
 
     - name: mask iptables
       systemd_service:
         name: iptables
         masked: true
 
-  handlers:
-    - name: restart nftables
-      systemd_service:
-        name: nftables
-        state: restarted
-        enabled: true
+    - name: set nftables state
+      block:
+        - name: enabled by default, if not in a vm
+          systemd_service:
+            name: nftables
+            enabled: true
+          when: in_vm
+
+        - name: triggers, when on baremetal
+          systemd_service:
+            name: nftables
+            state: "{{ 'restarted' if nftables_copy.changed else 'started' }}"
+          when: not in_vm
 
 - name: configure wireguard
   hosts: crib
@@ -502,21 +527,21 @@
 
     - name: set wireguard state
       block:
-        - name: just enable if in vm
+        - name: in vm
           systemd_service:
             name: "wg-quick@{{ item }}"
             enabled: true
           with_items: "{{ mss_wireguard_ifaces }}"
           when: in_vm
 
-        - name: if not in vm, alter state
+        - name: on baremetal
           systemd_service:
             name: "wg-quick@{{ item }}"
             state: "{{ 'restarted' if wg_config_link.changed else 'started'}}"
             enabled: true
           with_items: "{{ mss_wireguard_ifaces }}"
           when: not in_vm
-      when: is_router
+      when: "'routers' in group_names"
 
 - name: configure bind
   hosts: crib
@@ -591,179 +616,226 @@
         mode: '0640'
 
     - name: set named state
-      systemd_service:
-        name: named
-        state: "{{ 'restarted' if named_systemd_override.changed or base_named_copy.changed or zone_named_copy.changed else 'started' }}"
-        enabled: true
+      block:
+        - name: enabled by default
+          systemd_service:
+            name: named
+            enabled: true
+
+        - name: triggers
+          systemd_service:
+            name: named
+            state:
+              "{{ \
+                'restarted' if \
+                  named_systemd_override.changed or \
+                  base_named_copy.changed or \
+                  zone_named_copy.changed \
+                else \
+                  'started' \
+              }}"
+            enabled: true
 
 - name: configure docker
-  hosts: want_docker
+  hosts: crib
   become: yes
   tasks:
-    - name: copy over dockerns service
-      copy:
-        src: ./dir/etc/systemd/system/dockerns.service
-        dest: /etc/systemd/system
-        owner: root
-        group: root
-        mode: '0644'
-      register: dockerns_copy
+    - name: configure docker
+      block:
+        - name: copy over dockerns service
+          copy:
+            src: ./dir/etc/systemd/system/dockerns.service
+            dest: /etc/systemd/system
+            owner: root
+            group: root
+            mode: '0644'
+          register: dockerns_copy
 
-    - name: copy over docker overrides
-      copy:
-        src: ./dir/etc/systemd/system/docker.service.d
-        dest: /etc/systemd/system
-        owner: root
-        group: root
-        mode: '0644'
-      register: docker_systemd_override
+        - name: copy over docker overrides
+          copy:
+            src: ./dir/etc/systemd/system/docker.service.d
+            dest: /etc/systemd/system
+            owner: root
+            group: root
+            mode: '0644'
+          register: docker_systemd_override
 
-    - name: modify docker and containerd LimitNOFILE
-      replace:
-        path: "/usr/lib/systemd/system/{{ item }}.service"
-        regexp: 'LimitNOFILE=infinity'
-        replace: 'LimitNOFILE=1024:524288'
-      with_items:
-        - containerd
-        - docker
-      register: docker_systemd_file_replace
+        - name: modify docker and containerd LimitNOFILE
+          replace:
+            path: "/usr/lib/systemd/system/{{ item }}.service"
+            regexp: 'LimitNOFILE=infinity'
+            replace: 'LimitNOFILE=1024:524288'
+          with_items:
+            - containerd
+            - docker
+          register: docker_systemd_file_replace
 
-    - name: daemon reload
-      systemd_service:
-        daemon_reload: true
-      when: ( dockerns_copy.changed or docker_systemd_override.changed or docker_systemd_file_replace.changed )
+        - name: handle docker changes
+          block:
+            - name: daemon reload
+              systemd_service:
+                daemon_reload: true
 
-    - name: set dockerns state
-      systemd_service:
-        name: dockerns
-        state: "{{ 'restarted' if dockerns_copy.changed else 'started' }}"
-        enabled: true
-      register: dockerns_service_state
-      when: dockerns_copy.changed
+            - name: stop all in order
+              systemd_service:
+                name: "{{ item }}"
+                state: stopped
+                enabled: true
+              with_items:
+                - docker.service
+                - docker.socket
+                - containerd.service
+                - dockerns.service
+          when: >-
+            (
+              dockerns_copy.changed or 
+              docker_systemd_override.changed or
+              docker_systemd_file_replace.changed
+            )
 
-    - name: set docker state
-      systemd_service:
-        name: "{{ item }}"
-        state: "{{ 'restarted' if docker_systemd_override.changed or docker_systemd_file_replace.changed else 'started' }}"
-        enabled: true
-      with_items:
-        - docker
-        - containerd
+        # dockerns is a dep of docker<-containerd, running docker automatically
+        # runs dockerns.
+        - name: set docker state
+          systemd_service:
+            name: docker
+            state: started
+            enabled: true
 
-    - name: add user mss to group docker
-      user:
-        name: mss
-        groups: docker
-        append: yes
+        - name: add user mss to group docker
+          user:
+            name: mss
+            groups: docker
+            append: yes
+      when: '"docker" in pkgs'
 
 - name: configure libvirt
-  hosts: want_libvirt
+  hosts: crib
   become: yes
   tasks:
-    - name: set up libvirt service
+    - name: configure libvirt
       block:
-        - name: copy over libvirtdns service
-          copy:
-            src: ./dir/etc/systemd/system/libvirtdns.service
-            dest: /etc/systemd/system
-            owner: root
-            group: root
-            mode: '0644'
-          register: libvirtdns_copy
+        - name: set up libvirt service
+          block:
+            - name: copy over libvirtdns service
+              copy:
+                src: ./dir/etc/systemd/system/libvirtdns.service
+                dest: /etc/systemd/system
+                owner: root
+                group: root
+                mode: '0644'
+              register: libvirtdns_copy
 
-        - name: copy over libvirtd overrides
-          copy:
-            src: ./dir/etc/systemd/system/libvirtd.service.d
-            dest: /etc/systemd/system
-            owner: root
-            group: root
-            mode: '0644'
-          register: libvirtd_systemd_override
+            - name: copy over libvirtd overrides
+              copy:
+                src: ./dir/etc/systemd/system/libvirtd.service.d
+                dest: /etc/systemd/system
+                owner: root
+                group: root
+                mode: '0644'
+              register: libvirtd_systemd_override
 
-        - name: daemon reload
-          systemd_service:
-            daemon_reload: true
-          when: ( libvirtdns_copy.changed or libvirtd_systemd_override.changed )
+            - name: handle libvirt changes
+              block:
+                - name: daemon reload
+                  systemd_service:
+                    daemon_reload: true
 
-        - name: set libvirtdns state
-          systemd_service:
-            name: libvirtdns
-            state: "{{ 'restarted' if libvirtdns_copy.changed else 'started' }}"
-            enabled: true
+                - name: stop all in order
+                  systemd_service:
+                    name: "{{ item }}"
+                    state: stopped
+                    enabled: true
+                  with_items:
+                    - libvirtd.service
+                    - virtlogd.service
+                    - libvirtd-admin.socket
+                    - libvirtd-ro.socket
+                    - libvirtd.socket
+                    - virtlockd.socket
+                    - virtlogd.socket
+              when: >-
+                (
+                  libvirtd_systemd_override.changed or
+                  libvirtdns_copy.changed
+                )
 
         - name: set libvirt state
-          systemd_service:
-            name: "{{ item }}"
-            state: "{{ 'restarted' if libvirtd_systemd_override.changed else 'started' }}"
-            enabled: true
-          with_items:
-            - libvirtd
-            - virtlogd
+          block:
+            # set to never change because this kicks off other components and
+            # goes inactive, we care for failure, not change in this case.
+            - name: set libvirtd
+              systemd_service:
+                name: libvirtd
+                state: started
+                enabled: true
+              changed_when: false
 
-    - name: add user mss to group libvirt
-      user:
-        name: mss
-        groups: libvirt
-        append: yes
+            - name: set virtlogd
+              systemd_service:
+                name: virtlogd
+                state: started
+                enabled: false
 
-    - name: baremetal check
-      stat:
-        path: /mnt/mss/stuff/techy-bits/pools
-      register: on_baremetal
+        - name: add user mss to group libvirt
+          user:
+            name: mss
+            groups: libvirt
+            append: yes
 
-    - name: set up boxes
-      block:
-        - name: define networks
-          community.libvirt.virt_net:
-            command: define
-            name: "{{ item.name }}"
-            xml: '{{ lookup("file", item.xml) }}'
-          with_items:
-            - { name: "gat", xml: "./files/virtxml/net_gat.xml" }
-            - { name: "cumvirt", xml: "./files/virtxml/net_cumvirt.xml" }
+        - name: set up boxes
+          block:
+            - name: define networks
+              community.libvirt.virt_net:
+                command: define
+                name: "{{ item.name }}"
+                xml: '{{ lookup("file", item.xml) }}'
+              with_items:
+                - { name: "gat", xml: "./files/virtxml/net_gat.xml" }
+                - { name: "cumvirt", xml: "./files/virtxml/net_cumvirt.xml" }
 
-        - name: define pools
-          community.libvirt.virt_pool:
-            command: define
-            name: "{{ item.name }}"
-            xml: '{{ lookup("file", item.xml) }}'
-          with_items:
-            - { name: "cumvirt", xml: "./files/virtxml/pool_cumvirt.xml" }
-            - { name: "gat", xml: "./files/virtxml/pool_gat.xml" }
-            - { name: "iso", xml: "./files/virtxml/pool_iso.xml" }
+            - name: define pools
+              community.libvirt.virt_pool:
+                command: define
+                name: "{{ item.name }}"
+                xml: '{{ lookup("file", item.xml) }}'
+              with_items:
+                - { name: "cumvirt", xml: "./files/virtxml/pool_cumvirt.xml" }
+                - { name: "gat", xml: "./files/virtxml/pool_gat.xml" }
+                - { name: "iso", xml: "./files/virtxml/pool_iso.xml" }
 
-        - name: set network status
-          community.libvirt.virt_net:
-            autostart: true
-            state: active
-            name: "{{ item }}"
-          with_items:
-            - cumvirt
-            - gat
-          when: on_baremetal.stat.exists
+            - name: set status
+              block:
+                - name: set network status
+                  community.libvirt.virt_net:
+                    autostart: true
+                    state: active
+                    name: "{{ item }}"
+                  with_items:
+                    - cumvirt
+                    - gat
 
-        - name: set pool status
-          community.libvirt.virt_pool:
-            autostart: true
-            state: active
-            name: "{{ item }}"
-          with_items:
-            - cumvirt
-            - gat
-            - iso
-          when: on_baremetal.stat.exists
+                - name: set pool status
+                  community.libvirt.virt_pool:
+                    autostart: true
+                    state: active
+                    name: "{{ item }}"
+                  with_items:
+                    - cumvirt
+                    - gat
+                    - iso
 
-        - name: define domains
-          community.libvirt.virt:
-            command: define
-            autostart: false
-            xml: '{{ lookup("file", item) }}'
-          with_items:
-            - virtxml/dom_win10-ltsc-21h2.xml
-          when: on_baremetal.stat.exists
+                - name: define domains
+                  community.libvirt.virt:
+                    command: define
+                    autostart: false
+                    xml: '{{ lookup("file", item) }}'
+                  with_items:
+                    - virtxml/dom_win10-ltsc-21h2.xml
+              when: not in_vm
+      when: "'libvirt' in pkgs"
 
 - name: configure pulseaudio
-  hosts: want_multimedia
+  hosts: desktops
   become: yes
   tasks:
     # need to take a reboot for this normally, but this file never changes and
@@ -810,17 +882,17 @@
       with_items:
         - client
         - daemon
-      notify: restart pulseaudio
+      register: pulseconf_copy
 
     - name: set pulseaudio to use the socket
       replace:
         path: "/etc/pulse/{{ item }}.pa"
         regexp: "^load-module module-native-protocol-unix$"
         replace: "load-module module-native-protocol-unix auth-anonymous=1 socket=/var/run/pulse/native"
-      notify: restart pulseaudio
       with_items:
         - default
         - system
+      register: pulsepa_modify
 
     - name: copy over pulseaudio systemd service
       copy:
@@ -829,7 +901,7 @@
         owner: root
         group: root
         mode: '0644'
-      notify: restart pulseaudio
+      register: pulsesystemd_copy
 
     - name: add user mss to group pulse-access
       user:
@@ -837,15 +909,22 @@
         groups: pulse-access
         append: yes
 
-  handlers:
-    - name: restart pulseaudio
+    - name: set pulseaudio state
       systemd_service:
         name: pulseaudio
-        state: restarted
+        state:
+          "{{ \
+            'restarted' if \
+              pulseconf_copy.changed or \
+              pulsepa_modify.changed or \
+              pulsesystemd_copy.changed \
+            else \
+              'started' \
+          }}"
         enabled: true
 
 - name: configure mpd
-  hosts: want_multimedia
+  hosts: desktops
   become: yes
   tasks:
     - name: copy over mpd config
@@ -907,38 +986,36 @@
         enabled: true
 
 - name: configure acpid
-  hosts: x230
+  hosts: crib
   become: yes
   tasks:
-    - name: copy over the acpid handler script
-      copy:
-        src: ./dir/etc/acpi/handler.sh
-        dest: /etc/acpi
-        owner: root
-        group: root
-        mode: '0755'
-      register: acpid_copy
+    - name: configure acpid
+      block:
+        - name: copy over the acpid handler script
+          copy:
+            src: ./dir/etc/acpi/handler.sh
+            dest: /etc/acpi
+            owner: root
+            group: root
+            mode: '0755'
+          register: acpid_copy
 
-    - name: set acpid state
-      systemd_service:
-        name: acpid
-        state: "{{ 'restarted' if acpid_copy.changed else 'started' }}"
-        enabled: true
+        - name: set acpid state
+          systemd_service:
+            name: acpid
+            state: "{{ 'restarted' if acpid_copy.changed else 'started' }}"
+            enabled: true
+      when: "'acpid' in pkgs"
 
 - name: configure thinkfan
-  hosts: thinkpad
+  hosts: crib
   become: yes
   tasks:
-    - name: baremetal check
-      stat:
-        path: /proc/acpi/ibm/fan
-      register: on_baremetal
-
     - name: generate thinkfan config
       script:
         cmd: ./files/gen_thinkfan_conf.py
         creates: /etc/thinkfan.conf
-      when: on_baremetal.stat.exists
+      when: not in_vm and "'thinkfan' in pkgs"
 
 - name: bulk enable extra services
   hosts: crib
@@ -951,10 +1028,16 @@
         enabled: true
       with_items:
         - gpm
-        - qbittorrent-nox@mss.service
         - vnstat
 
     - name: enable but do not start module cleanup
       systemd_service:
         name: linux-modules-cleanup
         enabled: true
+
+    - name: enable qbittorrent
+      systemd_service:
+        name: qbittorrent-nox@mss.service
+        state: started
+        enabled: true
+      when: "'qbittorrent-nox' in pkgs"
