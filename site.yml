@@ -546,6 +546,12 @@
 - name: configure bind
   hosts: crib
   become: yes
+  vars:
+    zonersyncopts:
+      - "--chown=named:named"
+      - "--chmod=D750,F640"
+      - "--exclude=zone/37.13.10.jnl"
+      - "--exclude=zone/crib.jnl"
   roles:
     - role: ansible-resolv
       vars:
@@ -570,6 +576,18 @@
         daemon_reload: true
       when: named_systemd_override.changed
 
+    - name: resolve named.conf file to use
+      block:
+        - name: router named.conf
+          set_fact:
+            namedconf_file: named-router.conf
+          when: "'routers' in group_names"
+
+        - name: desktop named.conf
+          set_fact:
+            namedconf_file: named-desktop.conf
+          when: "'desktops' in group_names"
+
     - name: base named configuration
       ansible.posix.synchronize:
         src: "./dir/etc/{{ item }}"
@@ -584,9 +602,33 @@
             - "--chown=named:named"
             - "--chmod=F640"
       with_items:
-        - named.conf
+        - "{{ namedconf_file }}"
         - rndc.conf
       register: base_named_copy
+
+    # dhcpd does inplace edits on these files on lease actions
+    - name: check if zone files already exist
+      block:
+        - name: check crib A zone file
+          stat:
+            path: /var/named/zone/37.13.10
+          register: named_azone
+
+        - name: check crib PTR zone file
+          stat:
+            path: /var/named/zone/crib
+          register: named_ptrzone
+
+        - name: do not overwrite crib A zone file
+          set_fact:
+            zonersyncopts: "{{ zonersyncopts + ['--exclude=zone/crib'] }}"
+          when: named_azone.stat.exists
+
+        - name: do not overwrite crib PTR zone file
+          set_fact:
+            zonersyncopts: "{{ zonersyncopts + ['--exclude=zone/37.13.10'] }}"
+          when: named_ptrzone.stat.exists
+      when: "'routers' in group_names"
 
     - name: zonefiles
       ansible.posix.synchronize:
@@ -598,9 +640,7 @@
         group: false
         times: false
         checksum: true
-        rsync_opts:
-            - "--chown=named:named"
-            - "--chmod=D750,F640"
+        rsync_opts: "{{ zonersyncopts }}"
       register: zone_named_copy
 
     - name: generate /etc/rndc.key
