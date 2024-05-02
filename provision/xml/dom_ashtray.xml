@@ -18,7 +18,7 @@
             <target dev="vda" bus="virtio"/>
         </disk>
         <interface type="network">
-            <mac address="00:00:ab:ad:1d:eb"/>
+            <mac address="00:00:ab:ad:1d:ec"/>
             <source network="setboxes"/>
             <model type="virtio"/>
         </interface>
