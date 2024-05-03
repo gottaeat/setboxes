@@ -502,7 +502,6 @@
               DHCP=no
               LinkLocalAddressing=no
               IPv6AcceptRA=no
-              Address=10.13.37.1/24
             dest: "/etc/systemd/network/wan.network"
             owner: root
             group: root
