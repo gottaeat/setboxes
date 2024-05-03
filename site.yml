@@ -691,7 +691,9 @@
           systemd_service:
             name: nftables
             state: "{{ 'restarted' if nftables_copy.changed else 'started' }}"
+            enabled: true
           when: not in_vm
+          changed_when: false
 
 - name: configure wireguard
   hosts: crib
@@ -1081,6 +1083,7 @@
                     xml: '{{ lookup("file", item) }}'
                   with_items:
                     - virtxml/dom_win10-ltsc-21h2.xml
+                  changed_when: false
               when: not in_vm
       when: "'libvirt' in pkgs"
 
