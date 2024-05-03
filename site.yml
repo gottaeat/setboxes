@@ -266,7 +266,7 @@
         udevadm control --reload-rules && \
         udevadm trigger
 
-- name: modprobe configuration
+- name: modprobe blacklist configuraiton
   hosts: crib
   become: yes
   tasks:
@@ -274,7 +274,20 @@
       community.general.kernel_blacklist:
         name: ipv6
         state: present
-      
+
+- name: modules-load.d configuration
+  hosts: routers
+  become: yes
+  tasks:
+    - name: handle ppp + usb nic
+      modprobe:
+        name: "{{ item }}"
+        persistent: present
+        state: present
+      with_items:
+        - ppp_generic
+        - ax88179_178a
+
 - name: sysctl configuration
   hosts: crib
   become: yes
