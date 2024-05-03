@@ -465,7 +465,7 @@
   hosts: crib
   become: yes
   vars_files:
-    - ./files/router.yml
+    - /mnt/mss/stuff/techy-bits/git/vault/setboxes/router.yml
   tasks:
     - name: get rid of bootstrap networking
       file:
@@ -618,7 +618,7 @@
   hosts: routers
   become: yes
   vars_files:
-    - ./files/router.yml
+    - /mnt/mss/stuff/techy-bits/git/vault/setboxes/router.yml
   tasks:
     - name: template and copy over pap-secrets
       template:
