@@ -420,6 +420,22 @@
         - "/etc/profile"
         - "/etc/bash.bashrc"
 
+    - name: install symlinks for aliases
+      block:
+        - name: /mss/repo
+          file:
+            src: "/mnt/mss/stuff/techy-bits/git/setboxes"
+            dest: "/mss/repo"
+            state: link
+            force: yes
+
+        - name: /mss/work
+          file:
+            src: "/mnt/mss/stuff/techy-bits/work"
+            dest: "/mss/work"
+            state: link
+            force: yes
+
 - name: build landfill
   hosts: desktops
   become: yes
