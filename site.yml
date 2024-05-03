@@ -245,55 +245,6 @@
         sudo pacman -Qqd | sudo pacman -Rsu - --noconfirm
       ignore_errors: true
 
-- name: configure networking
-  hosts: desktops
-  become: yes
-  pre_tasks:
-    - name: copy over networkmanager configuration
-      copy:
-        src: ./dir/etc/NetworkManager/conf.d/
-        dest: /etc/NetworkManager/conf.d/
-        owner: root
-        group: root
-        mode: '0644'
-      register: nm_config_copy
-
-    - name: enable networkmanager
-      systemd_service:
-        name: NetworkManager
-        state: "{{ 'reloaded' if nm_config_copy.changed else 'started' }}"
-        enabled: true
-
-    - name: get rid of mkbaseimg.sh networking
-      file:
-        path: "/etc/systemd/network/80-dhcp.network"
-        state: absent
-      notify: restart networking components
-
-  handlers:
-    - name: restart networking components
-      systemd_service:
-        name: "{{ item }}"
-        state: restarted
-        enabled: true
-      with_items:
-        - systemd-networkd
-        - NetworkManager
-  roles:
-    - role: systemd-networkd
-      vars:
-        systemd_networkd_network:
-          lo:
-            - Match:
-              - Name: "lo"
-            - Network:
-              - Address: "127.0.0.1/8"
-              - Address: "10.0.99.0/32"
-        systemd_networkd_apply_config: true
-        systemd_networkd_enable_resolved: false
-        systemd_networkd_symlink_resolv_conf: false
-        systemd_networkd_manage_nsswitch_config: false
-
 - name: udev configuration
   hosts: crib
   become: yes
@@ -459,6 +410,158 @@
         build_dir: "landfill/build"
 
 # - - services - - #
+- name: configure systemd-networkd
+  hosts: crib
+  become: yes
+  tasks:
+    - name: get rid of bootstrap networking
+      file:
+        path: "/etc/systemd/network/80-dhcp.network"
+        state: absent
+
+    - name: loopback configuration
+      copy:
+        content: |
+          [Match]
+          Name=lo
+
+          [Network]
+          Address=127.0.0.1/8
+          Address=10.0.99.0/32
+        dest: "/etc/network/lo.network"
+        owner: root
+        group: root
+        mode: '0644'
+      register: lo_net_copy
+
+    - name: router specific networkd configuration
+      block:
+        # - - wan - - #
+        - name: configure wan link
+          copy:
+            content: |
+              [Match]
+              {{wan_match_criteria}}
+
+              [Link]
+              Name=wan
+              MACAddress={{wan_mac_addr}}
+            dest: "/etc/network/01-wan.link"
+            owner: root
+            group: root
+            mode: '0644'
+          register: wan_link_copy
+
+        - name: configure wan network
+          copy:
+            content: |
+              [Match]
+              Name=wan
+
+              [Network]
+              DHCP=no
+              LinkLocalAddressing=no
+              IPv6AcceptRA=no
+              Address=10.13.37.1/24
+            dest: "/etc/network/wan.network"
+            owner: root
+            group: root
+            mode: '0644'
+          register: wan_net_copy
+
+        # - - lan - - #
+        - name: configure lan link
+          copy:
+            content: |
+              [Match]
+              {{lan_match_criteria}}
+
+              [Link]
+              Name=lan
+            dest: "/etc/network/02-lan.link"
+            owner: root
+            group: root
+            mode: '0644'
+          register: lan_link_copy
+
+        - name: configure lan network
+          copy:
+            content: |
+              [Match]
+              Name=lan
+
+              [Network]
+              DHCP=no
+              LinkLocalAddressing=no
+              IPv6AcceptRA=no
+              Address=10.13.37.1/24
+            dest: "/etc/network/lan.network"
+            owner: root
+            group: root
+            mode: '0644'
+          register: lan_net_copy
+      when: "'routers' in group_names"
+
+    - name: set systemd-networkd state
+      block:
+        - name: enabled by default, if not in a vm
+          systemd_service:
+            name: systemd-networkd
+            enabled: true
+          when: in_vm
+
+        - name: triggers, when on baremetal (desktops)
+          systemd_service:
+            name: systemd-networkd
+            state: "{{ 'restarted' if lo_net_copy.changed or else 'started' }}"
+            enabled: true
+          when: not in_vm and "'desktops' in group_names"
+
+        - name: triggers, when on baremetal (routers)
+          systemd_service:
+            name: systemd-networkd
+            state:
+              "{{ \
+                'restarted' if \
+                  lo_net_copy.changed or \
+                  wan_link_copy.changed or \
+                  wan_net_copy.changed or \
+                  lan_link_copy.changed or \
+                  lan_net_copy.changed \
+                else \
+                  'started' \
+              }}"
+            enabled: true
+          when: not in_vm and "'routers' in group_names"
+
+- name: configure networkmanager
+  hosts: desktops
+  become: yes
+  tasks:
+    - name: copy over networkmanager configuration
+      copy:
+        src: ./dir/etc/NetworkManager/conf.d/
+        dest: /etc/NetworkManager/conf.d/
+        owner: root
+        group: root
+        mode: '0644'
+      register: nm_config_copy
+
+    - name: set networkmanager state
+      block:
+        - name: enabled by default, if not in a vm
+          systemd_service:
+            name: NetworkManager
+            enabled: true
+          when: in_vm
+
+        - name: triggers, when on baremetal
+          systemd_service:
+            name: NetworkManager
+            state: "{{ 'reloaded' if nm_config_copy.changed else 'started' }}"
+            enabled: true
+          when: not in_vm
+
 - name: configure pppd
   hosts: routers
   become: yes
@@ -1164,3 +1267,22 @@
         state: started
         enabled: true
       when: "'qbittorrent-nox' in pkgs"
+
+# - - cleanup - - #
+- name: cleanup
+  hosts: crib
+  become: yes
+  tasks:
+    - name: flush logs
+      shell:
+        cmd: |
+          journalctl --flush &&
+          journalctl --rotate &&
+          journalctl --vacuum-time=1s
+      changed_when: false
+
+    - name: trim
+      shell:
+        cmd: |
+          fstrim -va
+      changed_when: false
