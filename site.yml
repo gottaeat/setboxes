@@ -413,6 +413,8 @@
 - name: configure systemd-networkd
   hosts: crib
   become: yes
+  vars_files:
+    - ./files/router.yml
   tasks:
     - name: get rid of bootstrap networking
       file:
@@ -428,7 +430,7 @@
           [Network]
           Address=127.0.0.1/8
           Address=10.0.99.0/32
-        dest: "/etc/network/lo.network"
+        dest: "/etc/systemd/network/lo.network"
         owner: root
         group: root
         mode: '0644'
@@ -446,7 +448,7 @@
               [Link]
               Name=wan
               MACAddress={{wan_mac_addr}}
-            dest: "/etc/network/01-wan.link"
+            dest: "/etc/systemd/network/01-wan.link"
             owner: root
             group: root
             mode: '0644'
@@ -463,7 +465,7 @@
               LinkLocalAddressing=no
               IPv6AcceptRA=no
               Address=10.13.37.1/24
-            dest: "/etc/network/wan.network"
+            dest: "/etc/systemd/network/wan.network"
             owner: root
             group: root
             mode: '0644'
@@ -478,7 +480,7 @@
 
               [Link]
               Name=lan
-            dest: "/etc/network/02-lan.link"
+            dest: "/etc/systemd/network/02-lan.link"
             owner: root
             group: root
             mode: '0644'
@@ -495,7 +497,7 @@
               LinkLocalAddressing=no
               IPv6AcceptRA=no
               Address=10.13.37.1/24
-            dest: "/etc/network/lan.network"
+            dest: "/etc/systemd/network/lan.network"
             owner: root
             group: root
             mode: '0644'
@@ -748,8 +750,8 @@
 
     - name: base named configuration
       ansible.posix.synchronize:
-        src: "./dir/etc/{{ item }}"
-        dest: /etc
+        src: "./dir/etc/{{ item.src }}"
+        dest: "{{ item.dest }}"
         archive: yes
         delete: false
         owner: false
@@ -760,8 +762,8 @@
             - "--chown=named:named"
             - "--chmod=F640"
       with_items:
-        - "{{ namedconf_file }}"
-        - rndc.conf
+        - { src: "{{ namedconf_file }}", dest: /etc/named.conf }
+        - { src: rndc.conf, dest: /etc/rndc.conf }
       register: base_named_copy
 
     # dhcpd does inplace edits on these files on lease actions
