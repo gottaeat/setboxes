@@ -539,7 +539,7 @@
             name: systemd-networkd
             state: "{{ 'restarted' if lo_net_copy.changed else 'started' }}"
             enabled: true
-          when: not in_vm and "'desktops' in group_names"
+          when: "'desktops' in group_names and not in_vm"
 
         - name: triggers, when on baremetal (routers)
           systemd_service:
@@ -556,7 +556,7 @@
                   'started' \
               }}"
             enabled: true
-          when: not in_vm and "'routers' in group_names"
+          when: "'routers' in group_names and not in_vm"
 
 - name: configure networkmanager
   hosts: desktops
@@ -1265,7 +1265,7 @@
       script:
         cmd: ./files/gen_thinkfan_conf.py
         creates: /etc/thinkfan.conf
-      when: not in_vm and "'thinkfan' in pkgs"
+      when: "'thinkfan' in pkgs and not in_vm"
 
 - name: bulk enable extra services
   hosts: crib
