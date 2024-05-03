@@ -34,19 +34,26 @@ export ANSIBLE_DISPLAY_SKIPPED_HOSTS=false
 export ANSIBLE_DISPLAY_OK_HOSTS=false
 
 # 3. init the configuration of the VMs
-time ansible-playbook -i inv_vm.yml --flush-cache --ask-become-pass \
+time ansible-playbook \
+    -i inv_vm.yml \
+    --flush-cache \
+    --ask-become-pass \
     init.yml site.yml
 
 # 4. cut the qcow2's to compressed partclone images
 cd provision/
 ./mkimg.sh
 
-# 5. restore partclone images in baremetal, chroot to rootfs, call
-#    ./provision/setefi.sh
+# 5. restore partclone images in baremetal with:
+#    unzstd --stdout -k $image \
+#       | partclone.$fstype -r -s - -o $part
+#
+#    then chroot to rootfs and call:
+#    ./provision/setbootmgr.sh $machine
 
 # 6. handle baremetal targets once the images are written
-time ansible-playbook -i \
-    inv_bm.yml \
+time ansible-playbook \
+    -i inv_bm.yml \
     --flush-cache \
     --ask-become-pass \
     site.yml
