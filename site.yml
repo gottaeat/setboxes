@@ -44,7 +44,7 @@
           file:
             path: "/mnt/mss/{{ item }}"
             state: directory
-            recurse: true
+            recurse: false
           with_items:
             - archive
             - externalstuff
@@ -397,6 +397,26 @@
         project_name: "otg-utils"
         baremetal_path: "/mnt/mss/stuff/techy-bits/git/mss-otg"
         build_dir: "utils/build"
+    - name: set otg ownership
+      file:
+        path: "/mss/{{ item }}"
+        owner: root
+        group: root
+        recurse: yes
+      with_items:
+        - "bin"
+        - "etc"
+        - "share"
+
+    - name: install symlinks for the bash-handler
+      file:
+        src: "/mss/share/bash-handler"
+        dest: "{{ item }}"
+        state: link
+        force: yes
+      with_items:
+        - "/etc/profile"
+        - "/etc/bash.bashrc"
 
 - name: build landfill
   hosts: desktops
@@ -515,7 +535,7 @@
         - name: triggers, when on baremetal (desktops)
           systemd_service:
             name: systemd-networkd
-            state: "{{ 'restarted' if lo_net_copy.changed or else 'started' }}"
+            state: "{{ 'restarted' if lo_net_copy.changed else 'started' }}"
             enabled: true
           when: not in_vm and "'desktops' in group_names"
 
@@ -612,7 +632,7 @@
                 'restarted' if \
                   secret_copy.changed or \
                   isp_copy.changed or \
-                  ppp_opts_copy.changed or \
+                  ppp_opts_copy.changed \
                 else \
                   'started' \
               }}"
