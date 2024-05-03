@@ -129,8 +129,10 @@
     - files/pkglist/main.yml
     - files/pkglist/user.yml
   vars:
-    pkgs: "{{ (main_pkgs_base + user_pkgs_base + main_pkgs_extra + user_pkgs_extra) }}"
-    desktop_pkgs: "{{ (main_pkgs_multimedia + main_pkgs_desktop_extra + main_pkgs_wlan_tools) }}"
+    pkgs: "{{ ( main_pkgs_base + user_pkgs_base + main_pkgs_extra \
+      + user_pkgs_extra )}}"
+    desktop_pkgs: "{{ (  main_pkgs_multimedia + main_pkgs_desktop_extra \
+      + main_pkgs_wlan_tools + user_pkgs_multimedia ) }}"
   tasks:
     - name: resolve package list
       block:
