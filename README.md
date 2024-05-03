@@ -23,12 +23,13 @@ setboxes does the following:
 ```sh
 # 1. provision the backingStore image and deploy the VMs (as root)
 cd provision/
+pacman -Syyuu # base img creation requires an arch host as it uses pacstrap
 ./mkbaseimg.sh
 ./setlibvirt.sh
 cd ../
 
 # 2. install the ansible requirements and export vars
-ansible-galaxy collection install -r requirements.yml
+ansible-galaxy install -r requirements.yml
 export ANSIBLE_DISPLAY_SKIPPED_HOSTS=false
 export ANSIBLE_DISPLAY_OK_HOSTS=false
 
