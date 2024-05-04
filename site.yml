@@ -69,7 +69,7 @@
   hosts: crib
   become: true
   tasks:
-    - name: copy over vconsole.conf # change should trigger a initramfs rebuild
+    - name: copy over vconsole.conf
       copy:
         src: ./dir/etc/vconsole.conf
         dest: /etc
@@ -87,7 +87,15 @@
       with_items:
         - pacman.conf
         - makepkg.conf
-        - mkinitcpio.conf
+
+    - name: copy over mkinitcpio config file
+      copy:
+        src: ./dir/etc/mkinitcpio.conf
+        dest: /etc/
+        owner: root
+        group: root
+        mode: '0644'
+      register: trigger initramfs rebuild
 
     - name: set pacman mirrors
       copy:
@@ -121,6 +129,12 @@
             group: root
             mode: '0644'
       when: not sourceme_build_state.stat.exists
+  handlers:
+    - name: trigger initramfs rebuild
+      shell:
+        cmd: |
+          mkinitcpio -P
+      when: not in_vm
 
 - name: handle packages
   hosts: crib
