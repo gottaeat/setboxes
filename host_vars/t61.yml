@@ -11,4 +11,4 @@ mss_wireguard_ifaces:
 main_pkgs_extra:
   - base
 user_pkgs_extra:
-  - base
+  - thinkfan
