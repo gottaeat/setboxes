@@ -236,6 +236,14 @@
             extra_args: "--ask 4"
           notify: cleanup pacman
 
+    - name: remove grub residue left over from bootstrap image on EFI hosts
+      community.general.pacman:
+        name: grub
+        state: absent
+        extra_args: "--ask 4"
+      when: "'bios' not in group_names"
+      notify: cleanup pacman
+
     - name: handle groups
       block:
         - name: add user mss to group adbusers
