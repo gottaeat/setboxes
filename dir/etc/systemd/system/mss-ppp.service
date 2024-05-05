@@ -1,0 +1,12 @@
+[Unit]
+Description=Establish PPPoE to ISP
+After=network.target
+
+[Service]
+Type=notify
+Restart=always
+RestartSec=10s
+ExecStart=/usr/sbin/pppd call isp nodetach nolog up_sdnotify
+
+[Install]
+WantedBy=multi-user.target
