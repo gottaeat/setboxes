@@ -301,14 +301,11 @@
   hosts: routers
   become: yes
   tasks:
-    - name: handle ppp + usb nic
+    - name: handle ppp
       modprobe:
-        name: "{{ item }}"
+        name: ppp_generic
         persistent: present
         state: present
-      with_items:
-        - ppp_generic
-        - ax88179_178a
 
 - name: sysctl configuration
   hosts: crib
