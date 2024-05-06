@@ -1,3 +1,4 @@
+---
 roles:
   - name: ansible-resolv
     src: https://github.com/ahuffman/ansible-resolv
