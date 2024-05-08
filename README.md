@@ -28,17 +28,11 @@ pacman -Syyuu # base img creation requires an arch host as it uses pacstrap
 ./setlibvirt.sh
 cd ../
 
-# 2. install the ansible requirements and export vars
+# 2. install the ansible requirements
 ansible-galaxy install -r requirements.yml
-export ANSIBLE_DISPLAY_SKIPPED_HOSTS=false
-export ANSIBLE_DISPLAY_OK_HOSTS=false
 
 # 3. init the configuration of the VMs
-time ansible-playbook \
-    -i inv_vm.yml \
-    --flush-cache \
-    --ask-become-pass \
-    init.yml site.yml
+ansible-playbook --flush-cache -i inv_vm.yml init.yml site.yml
 
 # 4. cut the qcow2's to compressed partclone images
 cd provision/
@@ -52,9 +46,5 @@ cd provision/
 #    ./provision/setbootmgr.sh $machine
 
 # 6. handle baremetal targets once the images are written
-time ansible-playbook \
-    -i inv_bm.yml \
-    --flush-cache \
-    --ask-become-pass \
-    site.yml
+ansible-playbook --flush-cache -i inv_bm.yml site.yml
 ```
