@@ -32,7 +32,7 @@ cd ../
 ansible-galaxy install -r requirements.yml
 
 # 3. init the configuration of the VMs
-ansible-playbook --flush-cache -i inv_vm.yml init.yml site.yml
+ansible-playbook --flush-cache init.yml site.yml
 
 # 4. cut the qcow2's to compressed partclone images
 cd provision/
@@ -46,5 +46,5 @@ cd provision/
 #    ./provision/setbootmgr.sh $machine
 
 # 6. handle baremetal targets once the images are written
-ansible-playbook --flush-cache -i inv_bm.yml site.yml
+ansible-playbook --flush-cache site.yml
 ```
