@@ -1164,19 +1164,34 @@
 
             - name: set status
               block:
-                - name: set network status
+                - name: activate networks
                   community.libvirt.virt_net:
-                    autostart: true
                     state: active
                     name: "{{ item }}"
                   with_items:
                     - cumvirt
                     - gat
 
-                - name: set pool status
+                - name: autostart networks
+                  community.libvirt.virt_net:
+                    autostart: true
+                    name: "{{ item }}"
+                  with_items:
+                    - cumvirt
+                    - gat
+
+                - name: activate pools
+                  community.libvirt.virt_pool:
+                    state: active
+                    name: "{{ item }}"
+                  with_items:
+                    - cumvirt
+                    - gat
+                    - iso
+
+                - name: autostart networks
                   community.libvirt.virt_pool:
                     autostart: true
-                    state: active
                     name: "{{ item }}"
                   with_items:
                     - cumvirt
