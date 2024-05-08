@@ -238,12 +238,22 @@
           notify: cleanup pacman
 
     - name: remove grub residue left over from bootstrap image on EFI hosts
-      community.general.pacman:
-        name: grub
-        state: absent
-        extra_args: "--ask 4"
+      block:
+        - name: remove the grub package
+          community.general.pacman:
+            name: grub
+            state: absent
+            extra_args: "--ask 4"
+          notify: cleanup pacman
+
+        - name: remove grub residue in the boot partition
+          file:
+            path: "/boot/{{ item }}"
+            state: absent
+          with_items:
+            - EFI
+            - grub
       when: "'bios' not in group_names"
-      notify: cleanup pacman
 
     - name: handle groups
       block:
