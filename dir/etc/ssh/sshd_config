@@ -1,6 +1,6 @@
 AcceptEnv                  no
 AddressFamily              inet
-AllowAgentForwarding       no
+AllowAgentForwarding       yes
 AllowGroups                mss
 AllowStreamLocalForwarding yes
 AllowTcpForwarding         yes
