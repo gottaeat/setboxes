@@ -11,7 +11,7 @@
 # - - baseline system - - #
 - name: libc configuration
   hosts: crib
-  become: yes
+  become: true
   tasks:
     - name: set hostname
       hostname:
@@ -218,7 +218,7 @@
             repo: "https://aur.archlinux.org/yay.git"
             dest: /tmp/yay
             depth: 1
-            recursive: yes
+            recursive: true
 
         - name: build and install yay
           shell:
@@ -270,14 +270,14 @@
           user:
             name: mss
             groups: adbusers
-            append: yes
+            append: true
           when: '"android-tools" in pkgs'
 
         - name: add user mss to group wireshark
           user:
             name: mss
             groups: wireshark
-            append: yes
+            append: true
           when: '"wireshark-qt" in pkgs'
 
   handlers:
@@ -291,7 +291,7 @@
 
 - name: udev configuration
   hosts: crib
-  become: yes
+  become: true
   tasks:
     - name: copy over the rules
       copy:
@@ -310,7 +310,7 @@
 
 - name: modprobe blacklist configuraiton
   hosts: crib
-  become: yes
+  become: true
   tasks:
     - name: blacklist ipv6
       community.general.kernel_blacklist:
@@ -319,7 +319,7 @@
 
 - name: modules-load.d configuration
   hosts: routers
-  become: yes
+  become: true
   tasks:
     - name: handle ppp
       modprobe:
@@ -329,15 +329,15 @@
 
 - name: sysctl configuration
   hosts: crib
-  become: yes
+  become: true
   tasks:
     - name: set ipv4
       ansible.posix.sysctl:
         name: "{{ item['name'] }}"
         value: "{{ item['value'] }}"
         sysctl_file: /etc/sysctl.d/01-ipv4.conf
-        sysctl_set: yes
-        reload: yes
+        sysctl_set: true
+        reload: true
         state: present
       with_items:
         - { name: "net.ipv4.icmp_echo_ignore_broadcasts", value: 1 }
@@ -381,7 +381,7 @@
 
 - name: configure vim
   hosts: crib
-  become: yes
+  become: true
   vars:
     dir: [ ['/root', 'root'], ['/home/mss', 'mss'] ]
     subdir: [ 'backups', 'swaps' ]
@@ -407,11 +407,11 @@
         src: "/usr/bin/vim"
         dest: "/usr/bin/vi"
         state: link
-        force: yes
+        force: true
 
 - name: configure x11
   hosts: desktops
-  become: yes
+  become: true
   tasks:
     - name: allow x11 to run as root
       copy:
@@ -432,7 +432,7 @@
 # - - mss wares - - #
 - name: build mss-nfqws
   hosts: crib
-  become: yes
+  become: true
   roles:
     - role: handle_meson
       vars:
@@ -443,7 +443,7 @@
 
 - name: build utils
   hosts: crib
-  become: yes
+  become: true
   roles:
     - role: handle_meson
       vars:
@@ -457,7 +457,7 @@
         path: "/mss/{{ item }}"
         owner: root
         group: root
-        recurse: yes
+        recurse: true
       with_items:
         - "bin"
         - "etc"
@@ -468,7 +468,7 @@
         src: "/mss/share/bash-handler"
         dest: "{{ item }}"
         state: link
-        force: yes
+        force: true
       with_items:
         - "/etc/profile"
         - "/etc/bash.bashrc"
@@ -480,18 +480,18 @@
             src: "/mnt/mss/stuff/techy-bits/git/setboxes"
             dest: "/mss/repo"
             state: link
-            force: yes
+            force: true
 
         - name: /mss/work
           file:
             src: "/mnt/mss/stuff/techy-bits/work"
             dest: "/mss/work"
             state: link
-            force: yes
+            force: true
 
 - name: build landfill
   hosts: desktops
-  become: yes
+  become: true
   roles:
     - role: handle_meson
       vars:
@@ -503,7 +503,7 @@
 # - - services - - #
 - name: configure systemd-networkd
   hosts: crib
-  become: yes
+  become: true
   vars_files:
     - "{{ vaultdir }}/setboxes/router.yml"
   tasks:
@@ -667,7 +667,7 @@
 
 - name: configure networkmanager
   hosts: desktops
-  become: yes
+  become: true
   tasks:
     - name: copy over networkmanager configuration
       copy:
@@ -695,7 +695,7 @@
 
 - name: configure pppd
   hosts: routers
-  become: yes
+  become: true
   vars_files:
     - "{{ vaultdir }}/setboxes/router.yml"
   tasks:
@@ -760,7 +760,7 @@
 
 - name: configure systemd-logind
   hosts: crib
-  become: yes
+  become: true
   tasks:
     - name: copy over logind config
       copy:
@@ -780,7 +780,7 @@
 
 - name: configure nftables
   hosts: crib
-  become: yes
+  become: true
   tasks:
     - name: copy nftables.conf to /etc
       copy:
@@ -814,7 +814,7 @@
 
 - name: configure wireguard
   hosts: crib
-  become: yes
+  become: true
   tasks:
     - name: create client symlinks for {{ mss_hostname }}
       file:
@@ -846,7 +846,7 @@
 
 - name: configure bind
   hosts: crib
-  become: yes
+  become: true
   vars:
     zonersyncopts:
       - "--chown=named:named"
@@ -893,7 +893,7 @@
       ansible.posix.synchronize:
         src: "./dir/etc/{{ item.src }}"
         dest: "{{ item.dest }}"
-        archive: yes
+        archive: true
         delete: false
         owner: false
         group: false
@@ -935,7 +935,7 @@
       ansible.posix.synchronize:
         src: ./dir/var/named
         dest: /var
-        archive: yes
+        archive: true
         delete: true
         owner: false
         group: false
@@ -979,7 +979,7 @@
 
 - name: configure isc dhcpd(v4)
   hosts: routers
-  become: yes
+  become: true
   tasks:
     - name: configure dhcpd4
       copy:
@@ -1007,7 +1007,7 @@
 
 - name: configure docker
   hosts: crib
-  become: yes
+  become: true
   tasks:
     - name: configure docker
       block:
@@ -1074,12 +1074,12 @@
           user:
             name: mss
             groups: docker
-            append: yes
+            append: true
       when: '"docker" in pkgs'
 
 - name: configure libvirt
   hosts: crib
-  become: yes
+  become: true
   tasks:
     - name: configure libvirt
       block:
@@ -1149,7 +1149,7 @@
           user:
             name: mss
             groups: libvirt
-            append: yes
+            append: true
 
         - name: set up boxes
           block:
@@ -1221,7 +1221,7 @@
 
 - name: configure pulseaudio
   hosts: desktops
-  become: yes
+  become: true
   tasks:
     # need to take a reboot for this normally, but this file never changes and
     # it gets copied over when we're setting up in the vm, should not fuck
@@ -1237,7 +1237,7 @@
     - name: configure user pulse
       block:
         - name: add pulseaudio groups
-          ansible.builtin.group:
+          group:
             name: "{{ item }}"
             state: present
           with_items:
@@ -1245,7 +1245,7 @@
             - pulse-access
 
         - name: add pulse user
-          ansible.builtin.user:
+          user:
             name: pulse
             group: pulse
             groups: audio
@@ -1292,7 +1292,7 @@
       user:
         name: mss
         groups: pulse-access
-        append: yes
+        append: true
 
     - name: set pulseaudio state
       systemd_service:
@@ -1310,7 +1310,7 @@
 
 - name: configure mpd
   hosts: desktops
-  become: yes
+  become: true
   tasks:
     - name: copy over mpd config
       copy:
@@ -1363,7 +1363,7 @@
 
 - name: configure ntpd
   hosts: crib
-  become: yes
+  become: true
   tasks:
     - name: copy over ntpd config
       copy:
@@ -1382,7 +1382,7 @@
 
 - name: configure tor
   hosts: crib
-  become: yes
+  become: true
   tasks:
     - name: copy over proxychains config
       copy:
@@ -1400,7 +1400,7 @@
 
 - name: configure acpid
   hosts: crib
-  become: yes
+  become: true
   tasks:
     - name: configure acpid
       block:
@@ -1422,7 +1422,7 @@
 
 - name: configure thinkfan
   hosts: crib
-  become: yes
+  become: true
   tasks:
     - name: configure thinkfans
       block:
@@ -1448,7 +1448,7 @@
 
 - name: bulk enable extra services
   hosts: crib
-  become: yes
+  become: true
   tasks:
     - name: bulk enable extra services
       systemd_service:
@@ -1474,7 +1474,7 @@
 # - - cleanup - - #
 - name: cleanup
   hosts: crib
-  become: yes
+  become: true
   tasks:
     - name: flush logs
       shell:

@@ -17,7 +17,7 @@
         repo: "{{ project_url }}"
         dest: "{{ project_path }}"
         depth: 1
-        recursive: yes
+        recursive: true
   when: in_vm and not vm_init.stat.exists
 
 # 3. we are on baremetal
