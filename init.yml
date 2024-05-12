@@ -64,7 +64,7 @@
     - ansible_password: loggedin
     - ansible_port: 22
   vars_files:
-    - /mnt/mss/stuff/techy-bits/git/vault/setboxes/pass.yml
+    - "{{ vaultdir }}/setboxes/pass.yml"
   tasks:
     - name: set root password
       ansible.builtin.user:
