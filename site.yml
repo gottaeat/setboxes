@@ -1,4 +1,13 @@
 ---
+# - - update init - - #
+- name: call initialization tasks in case what is handled there has changed
+  hosts: crib
+  become: true
+  vars_files:
+    -  "{{ vaultdir }}/setboxes/pass.yml"
+  roles:
+    - role: initialize
+
 # - - baseline system - - #
 - name: libc configuration
   hosts: crib
@@ -424,8 +433,8 @@
 - name: build mss-nfqws
   hosts: crib
   become: yes
-  tasks:
-    - include_tasks: ./files/handle_meson.yml
+  roles:
+    - role: handle_meson
       vars:
         project_url: "https://github.com/gottaeat/mss-nfqws"
         project_name: "mss-nfqws"
@@ -435,13 +444,14 @@
 - name: build utils
   hosts: crib
   become: yes
-  tasks:
-    - include_tasks: ./files/handle_meson.yml
+  roles:
+    - role: handle_meson
       vars:
         project_url: "https://github.com/gottaeat/mss-otg"
         project_name: "otg-utils"
         baremetal_path: "/mnt/mss/stuff/techy-bits/git/mss-otg"
         build_dir: "utils/build"
+  tasks:
     - name: set otg ownership
       file:
         path: "/mss/{{ item }}"
@@ -482,8 +492,8 @@
 - name: build landfill
   hosts: desktops
   become: yes
-  tasks:
-    - include_tasks: ./files/handle_meson.yml
+  roles:
+    - role: handle_meson
       vars:
         project_url: "https://github.com/gottaeat/mss-otg"
         project_name: "otg-landfill"
