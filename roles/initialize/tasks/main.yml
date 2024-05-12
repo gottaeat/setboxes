@@ -1,0 +1,88 @@
+---
+- name: set root password
+  user:
+    name: root
+    update_password: always
+    password: "{{ root_passwd }}"
+
+- name: configure user mss
+  block:
+    - name: add mss group
+      group:
+        name: mss
+        gid: 1001
+        state: present
+
+    - name: add mss user
+      user:
+        name: mss
+        uid: 1001
+        password: "{{ user_passwd }}"
+        password_lock: false
+        group: mss
+        groups: "{{ mss_groups_base }}"
+        append: true
+        create_home: true
+        home: /home/mss
+        skeleton: /dev/null
+        expires: -1
+        comment: ya boi
+        shell: /bin/bash
+        state: present
+
+    - name: set authorized_keys for mss user
+      ansible.posix.authorized_key:
+        user: mss
+        state: present
+        key: "{{ lookup('url', 'https://github.com/gottaeat.keys', split_lines=False) }}"
+
+- name: configure sudo
+  block:
+    - name: allow wheel to run sudo
+      replace:
+        path: /etc/sudoers
+        regexp: '^# (%wheel ALL=\(ALL:ALL\) ALL)'
+        replace: '\1'
+
+    - name: disable lecture prompt
+      copy:
+        content: |
+            Defaults lecture = never
+        dest: "/etc/sudoers.d/lecture"
+        owner: root
+        group: root
+        mode: '0400'
+
+    - name: allow group mss to run rsync as root w/o a password
+      community.general.sudoers:
+        name: rsync
+        state: present
+        group: mss
+        nopassword: true
+        commands: /usr/bin/rsync
+
+- name: configure sshd
+  block:
+    - name: copy sshd configuration
+      copy:
+        src: ./dir/etc/ssh/sshd_config
+        dest: /etc/ssh
+        owner: root
+        group: root
+        mode: '0644'
+      notify: restart sshd
+
+    - name: copy banner
+      copy:
+        src: "./files/banners/{{ mss_hostname }}"
+        dest: /etc/ssh/banner
+        owner: root
+        group: root
+        mode: '0644'
+
+- name: create the stat dir in /var/lib
+  file:
+    path: /var/lib/mss_ansible
+    state: directory
+    owner: root
+    group: root
