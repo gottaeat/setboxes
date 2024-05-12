@@ -15,7 +15,7 @@ class GenInventory:
     def _get_libvirt_state(self):
         # try to connect to libvirtd, if cannot, assume on baremetal
         try:
-            self.conn = libvirt.open("qemu:///systema")
+            self.conn = libvirt.open("qemu:///system")
         except libvirt.libvirtError:
             # cannot connect to libvirt, assume on baremetal
             self.in_vm = False
