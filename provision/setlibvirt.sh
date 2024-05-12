@@ -72,10 +72,14 @@ set_volumes(){
                 | sed 's|<path>||g;s|</path>||g' | tr -d "[:space:]")"
 
             qemu-nbd --connect=/dev/nbd1 "${path_to_vol}"
+            sleep 5; partprobe; sleep 1
+
             echo -e "d\n2\nn\n2\n\n+${bm_size}\nw\n" | fdisk /dev/nbd1
             e2fsck -f -y /dev/nbd1p2
             resize2fs /dev/nbd1p2
+
             qemu-nbd --disconnect /dev/nbd1
+            sleep 5; partprobe; sleep 1
         fi
     done
 

@@ -22,6 +22,7 @@ nbdcheck
 
 qemu-img create -f qcow2 "${IMGNAME}" "${IMGSIZE}"
 qemu-nbd --connect="${NBDDEV}" "${IMGNAME}"
+sleep 5; partprobe; sleep 1
 
 sgdisk \
     --zap-all \
@@ -147,6 +148,7 @@ fstrim --verbose "${MOUNT}/boot"
 umount "${NBDDEV}"p1
 umount "${NBDDEV}"p2
 qemu-nbd --disconnect "${NBDDEV}"
+sleep 5; partprobe; sleep 1
 
 # - - send to pool - - #
 mv "${IMGNAME}" "${POOLDIR}"

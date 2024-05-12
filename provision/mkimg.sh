@@ -23,6 +23,7 @@ iterate_xmls(){
 
         virsh destroy --graceful --domain "${volname}" >/dev/null 2>&1 || true
         qemu-nbd --connect=/dev/nbd1 "${path_to_vol}" >/dev/null 2>&1
+        sleep 5; partprobe; sleep 1
 
         if [ "${bootpfs}" == "ext4" ]; then
             e2fsck -fy /dev/nbd1p1 >/dev/null 2>&1 || true
@@ -39,6 +40,7 @@ iterate_xmls(){
                 "${_IMGDIR}"/"${_TSTAMP}"-setboxes-"${volname}"-p2.img.zst
 
         qemu-nbd --disconnect /dev/nbd1 >/dev/null 2>&1
+        sleep 5; partprobe; sleep 1
     done
 }
 
