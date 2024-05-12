@@ -1,7 +1,13 @@
 ---
+# ansible
 remote_user: mss
 ansible_user: mss
 ansible_port: 3131
+
+# paths
+vaultdir: /mnt/mss/stuff/techy-bits/git/vault
+
+# user
 mss_groups_base:
   - adm
   - audio
