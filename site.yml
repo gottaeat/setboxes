@@ -284,10 +284,12 @@
     - name: cleanup pacman
       become_user: aur
       shell: |
-        yay -Scc --noconfirm && \
-        sudo pacman -Qtdq | sudo pacman -Rns - --noconfirm && \
+        rm -rf /home/aur/.cache; \
+        yay -Scc --noconfirm; \
+        sudo pacman -Qtdq | sudo pacman -Rns - --noconfirm; \
         sudo pacman -Qqd | sudo pacman -Rsu - --noconfirm
       ignore_errors: true
+      changed_when: false
 
 - name: udev configuration
   hosts: crib
