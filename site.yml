@@ -1146,6 +1146,7 @@
                 name: virtlogd
                 state: started
                 enabled: false
+              changed_when: false
 
         - name: add user mss to group libvirt
           user:
