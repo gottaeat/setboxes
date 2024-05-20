@@ -171,9 +171,13 @@ class PkgDiff:
                 msg += f" - {i}\n"
 
         if len(ansible_v_local) != 0:
+            msg += "\n"
+
             msg += "present on the local machine but not in Ansible:\n"
             for i in ansible_v_local:
                 msg += f" - {i}\n"
+
+            msg = msg.rstrip("\n")
 
         if len(msg) == 0:
             msg = "there are no differences."
