@@ -243,7 +243,7 @@
             name: "{{ pkgs }}"
             use: yay
             aur_only: false
-            extra_args: "--ask 4"
+            extra_args: "--ask 4 --asexplicit"
           notify: cleanup pacman
 
     - name: remove grub residue left over from bootstrap image on EFI hosts
