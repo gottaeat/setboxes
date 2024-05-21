@@ -1,7 +1,12 @@
 #!/usr/bin/python
 import json
 
-import libvirt
+no_libvirt = False
+
+try:
+    import libvirt
+except:
+    no_libvirt = True
 
 
 class GenInventory:
@@ -75,11 +80,15 @@ class GenInventory:
         pass
 
     def run(self):
-        # libvirt exceptions, even when they are caught, print out the error
-        # message for some reason, hijack the handler instead
-        libvirt.registerErrorHandler(f=self.libvirt_callback, ctx=None)
+        if no_libvirt:
+            self.in_vm = False
+        else:
+            # libvirt exceptions, even when they are caught, print out the error
+            # message for some reason, hijack the handler instead
+            libvirt.registerErrorHandler(f=self.libvirt_callback, ctx=None)
 
-        self._get_libvirt_state()
+            self._get_libvirt_state()
+
         self._check_domains()
         self._dump_jayson()
 
