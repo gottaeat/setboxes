@@ -855,6 +855,7 @@
       - "--chmod=D750,F640"
       - "--exclude=zone/37.13.10.jnl"
       - "--exclude=zone/crib.jnl"
+      - "--exclude=extra.conf"
   roles:
     - role: ansible-resolv
       vars:
@@ -946,6 +947,15 @@
         rsync_opts: "{{ zonersyncopts }}"
       register: zone_named_copy
 
+    - name: extra config
+      copy:
+        src: "{{ vaultdir }}/setboxes/dir/var/named/extra.conf"
+        dest: /var/named
+        owner: named
+        group: named
+        mode: '0640'
+      register: extra_conf_copy
+
     - name: generate /etc/rndc.key
       command:
         cmd: rndc-confgen -a -c /etc/rndc.key
@@ -973,7 +983,8 @@
                 'restarted' if \
                   named_systemd_override.changed or \
                   base_named_copy.changed or \
-                  zone_named_copy.changed \
+                  zone_named_copy.changed or \
+                  extra_conf_copy.changed \
                 else \
                   'started' \
               }}"
