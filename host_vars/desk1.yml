@@ -7,7 +7,6 @@ mss_wireguard_ifaces:
 main_pkgs_extra:
   - aarch64-linux-gnu-gcc
   - amd-ucode
-  - ansible
   - arm-none-eabi-gcc
   - cdrtools
   - cmake
