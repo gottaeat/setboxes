@@ -42,7 +42,11 @@ table ip ashtray {
         iifname $LAN_IFACE counter accept
         iifname $NETNS_IF counter accept
         iifname $VPN_IF counter accept
+{% if ppp_wan %}
         iifname $WAN_IFACE oifname { $PPP_MASTER_IFACE, $NETNS_IF } counter accept
+{% else %}
+        iifname $WAN_IFACE oifname $NETNS_IF counter accept
+{% endif %}
     }
 
     # FILTER<-FORWARD (mangle)
