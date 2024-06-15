@@ -817,8 +817,13 @@
   become: true
   tasks:
     - name: copy nftables.conf to /etc
-      copy:
-        src: "./files/nftables/{{ mss_hostname }}.nft"
+      template:
+        src: >
+          {%- if 'routers' in group_names -%}
+          ./files/nftables/{{ mss_hostname }}.nft.j2
+          {%- else -%}
+          ./files/nftables/{{ mss_hostname }}.nft
+          {%- endif -%}
         dest: /etc/nftables.conf
         owner: root
         group: root
