@@ -1,0 +1,13 @@
+[Match]
+Name=cloaca
+
+[Network]
+VLAN=lan
+VLAN=wan
+
+DHCP=no
+EmitLLDP=no
+IPv6AcceptRA=no
+IPv6SendRA=no
+LLDP=no
+LinkLocalAddressing=no
