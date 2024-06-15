@@ -64,6 +64,7 @@ class GenInventory:
                     "t61": {
                         "ansible_host": "192.168.199.4" if self.in_vm else "ashtray",
                         "in_vm": self.in_vm,
+                        "ppp_wan": False,
                     },
                 }
             },
