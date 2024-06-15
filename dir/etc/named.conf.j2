@@ -4,9 +4,11 @@ acl "loopback" {
     10.0.99.0/32;
 };
 
+{% if 'routers' in group_names %}
 acl "local-net" {
     10.13.37.0/24;
 };
+{% endif %}
 
 acl "netns" {
     10.0.100.0/31;
@@ -25,8 +27,10 @@ acl "local-box" {
 
 acl "aggregate-trusted" {
     "local-box";
+{% if 'routers' in group_names %}
     "local-net";
     "vpn";
+{% endif %}
 };
 
 // rndc
@@ -46,7 +50,11 @@ options {
     listen-on { any; };
     listen-on-v6 { none; };
 
+{% if 'routers' in group_names %}
+    empty-zones-enable no;
+{% else %}
     empty-zones-enable yes;
+{% endif %}
     minimal-responses yes;
     dnssec-validation no;
 };
@@ -97,16 +105,48 @@ view "recurse" {
     };
 
     zone "crib" {
+{% if 'routers' in group_names %}
         type master;
         file "/var/named/zone/crib";
         allow-update { key "rndc-key"; };
+{% else %}
+        type forward;
+        forwarders { 10.13.37.1; };
+{% endif %}
     };
 
     zone "37.13.10.in-addr.arpa" {
+{% if 'routers' in group_names %}
         type master;
         file "/var/named/zone/37.13.10";
         allow-update { key "rndc-key"; };
+{% else %}
+        type forward;
+        forwarders { 10.13.37.1; };
+{% endif %}
     };
+
+{% if 'routers' not in group_names %}
+    zone "lichen" {
+        type forward;
+        forwarders { 10.13.38.1; };
+    };
+
+    zone "38.13.10.in-addr.arpa" {
+        type forward;
+        forwarders { 10.13.38.1; };
+    };
+
+    zone "lichenraw" {
+        type forward;
+        forwarders { 10.13.39.1; };
+    };
+
+    zone "39.13.10.in-addr.arpa" {
+        type forward;
+        forwarders { 10.13.39.1; };
+    };
+{% endif %}
 
     include "/var/named/extra.conf";
     include "/tmp/bind/named.conf.local";
