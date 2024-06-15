@@ -529,7 +529,7 @@
         # - - vlans - - #
         - name: configure lan vlan
           copy:
-            content: ./dir/etc/systemd/network/01-lan.netdev
+            src: ./dir/etc/systemd/network/01-lan.netdev
             dest: "/etc/systemd/network/01-lan.netdev"
             owner: root
             group: root
