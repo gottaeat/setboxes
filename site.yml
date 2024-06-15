@@ -328,6 +328,7 @@
         name: ppp_generic
         persistent: present
         state: present
+      when: ppp_wan
 
 - name: sysctl configuration
   hosts: crib
@@ -617,20 +618,48 @@
           register: lan_network_copy
 
         - name: configure wan network
-          copy:
-            content: |
-              [Match]
-              Name=wan
-              Type=vlan
+          block:
+            - name: configure for ppp
+              copy:
+                content: |
+                  [Match]
+                  Name=wan
+                  Type=vlan
 
-              [Link]
-              ActivationPolicy=always-up
-              IgnoreCarrierLoss=true
-            dest: "/etc/systemd/network/wan.network"
-            owner: root
-            group: root
-            mode: '0644'
-          register: wan_network_copy
+                  [Link]
+                  ActivationPolicy=always-up
+                  IgnoreCarrierLoss=true
+                dest: "/etc/systemd/network/wan.network"
+                owner: root
+                group: root
+                mode: '0644'
+              register: wan_network_copy
+              when: ppp_wan
+
+            - name: configure for dhcp
+              copy:
+                content: |
+                  [Match]
+                  Name=wan
+                  Type=vlan
+
+                  [Link]
+                  ActivationPolicy=always-up
+                  IgnoreCarrierLoss=true
+
+                  [Network]
+                  DHCP=ipv4
+
+                  [DHCPv4]
+                  Anonymize=yes
+                  UseGateway=yes
+                  UseHostname=no
+                dest: "/etc/systemd/network/wan.network"
+                owner: root
+                group: root
+                mode: '0644'
+              register: wan_network_copy
+              when: not ppp_wan
       when: "'routers' in group_names"
 
     - name: set systemd-networkd state
@@ -701,64 +730,67 @@
   vars_files:
     - "{{ vaultdir }}/setboxes/router.yml"
   tasks:
-    - name: template and copy over pap-secrets
-      template:
-        src: ./dir/etc/ppp/pap-secrets.j2
-        dest: /etc/ppp/pap-secrets
-        owner: root
-        group: root
-        mode: '0600'
-      register: secret_copy
-
-    - name: template and copy over isp peer config
-      template:
-        src: ./dir/etc/ppp/peers/isp.j2
-        dest: /etc/ppp/peers/isp
-        owner: root
-        group: root
-        mode: '0644'
-      register: isp_copy
-
-    - name: copy over options
-      copy:
-        src: ./dir/etc/ppp/options
-        dest: /etc/ppp
-        owner: root
-        group: root
-        mode: '0644'
-      register: ppp_opts_copy
-
-    - name: copy over mss-ppp systemd service
-      copy:
-        src: "./dir/etc/systemd/system/mss-ppp.service"
-        dest: /etc/systemd/system
-        owner: root
-        group: root
-        mode: '0644'
-      register: pppsystemd_copy
-
-    - name: set pppd state
+    - name: configure pppd
       block:
-        - name: enabled by default
-          systemd_service:
-            name: mss-ppp
-            enabled: true
+        - name: template and copy over pap-secrets
+          template:
+            src: ./dir/etc/ppp/pap-secrets.j2
+            dest: /etc/ppp/pap-secrets
+            owner: root
+            group: root
+            mode: '0600'
+          register: secret_copy
 
-        - name: triggers
-          systemd_service:
-            name: mss-ppp
-            state:
-              "{{ \
-                'restarted' if \
-                  secret_copy.changed or \
-                  isp_copy.changed or \
-                  ppp_opts_copy.changed or \
-                  pppsystemd_copy.changed \
-                else \
-                  'started' \
-              }}"
-            enabled: true
-          when: not in_vm
+        - name: template and copy over isp peer config
+          template:
+            src: ./dir/etc/ppp/peers/isp.j2
+            dest: /etc/ppp/peers/isp
+            owner: root
+            group: root
+            mode: '0644'
+          register: isp_copy
+
+        - name: copy over options
+          copy:
+            src: ./dir/etc/ppp/options
+            dest: /etc/ppp
+            owner: root
+            group: root
+            mode: '0644'
+          register: ppp_opts_copy
+
+        - name: copy over mss-ppp systemd service
+          copy:
+            src: "./dir/etc/systemd/system/mss-ppp.service"
+            dest: /etc/systemd/system
+            owner: root
+            group: root
+            mode: '0644'
+          register: pppsystemd_copy
+
+        - name: set pppd state
+          block:
+            - name: enabled by default
+              systemd_service:
+                name: mss-ppp
+                enabled: true
+
+            - name: triggers
+              systemd_service:
+                name: mss-ppp
+                state:
+                  "{{ \
+                    'restarted' if \
+                      secret_copy.changed or \
+                      isp_copy.changed or \
+                      ppp_opts_copy.changed or \
+                      pppsystemd_copy.changed \
+                    else \
+                      'started' \
+                  }}"
+                enabled: true
+              when: not in_vm
+      when: ppp_wan
 
 - name: configure systemd-logind
   hosts: crib
