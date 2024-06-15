@@ -914,33 +914,15 @@
         daemon_reload: true
       when: named_systemd_override.changed
 
-    - name: resolve named.conf file to use
-      block:
-        - name: router named.conf
-          set_fact:
-            namedconf_file: named-router.conf
-          when: "'routers' in group_names"
-
-        - name: desktop named.conf
-          set_fact:
-            namedconf_file: named-desktop.conf
-          when: "'desktops' in group_names"
-
     - name: base named configuration
-      ansible.posix.synchronize:
+      template:
         src: "./dir/etc/{{ item.src }}"
         dest: "{{ item.dest }}"
-        archive: true
-        delete: false
-        owner: false
-        group: false
-        times: false
-        checksum: true
-        rsync_opts:
-            - "--chown=named:named"
-            - "--chmod=F640"
+        owner: named
+        group: named
+        mode: '0640'
       with_items:
-        - { src: "{{ namedconf_file }}", dest: /etc/named.conf }
+        - { src: named.conf.j2, dest: /etc/named.conf }
         - { src: rndc.conf, dest: /etc/rndc.conf }
       register: base_named_copy
 
