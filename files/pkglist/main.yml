@@ -6,6 +6,7 @@ main_pkgs_base:
   - base-devel
   - bc
   - bind
+  - binwalk
   - diffutils
   - dosfstools
   - ethtool
@@ -90,6 +91,7 @@ main_pkgs_multimedia:
   - libxinerama
   - libxrender
   - maim
+  - mesa-utils
   - mpd
   - mpv
   - mumble
