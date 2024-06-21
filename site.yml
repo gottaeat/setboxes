@@ -536,6 +536,15 @@
             mode: '0644'
           register: lan_netdev_copy
 
+        - name: configure guest vlan
+          copy:
+            src: ./dir/etc/systemd/network/03-guest.netdev
+            dest: "/etc/systemd/network/03-guest.netdev"
+            owner: root
+            group: root
+            mode: '0644'
+          register: guest_netdev_copy
+
         - name: configure wan vlan
           template:
             src: ./dir/etc/systemd/network/02-wan.netdev.j2
@@ -548,8 +557,8 @@
         # - - physical - - #
         - name: configure cloaca link
           template:
-            src: ./dir/etc/systemd/network/03-cloaca.link.j2
-            dest: "/etc/systemd/network/03-cloaca.link"
+            src: ./dir/etc/systemd/network/04-cloaca.link.j2
+            dest: "/etc/systemd/network/04-cloaca.link"
             owner: root
             group: root
             mode: '0644'
@@ -573,6 +582,15 @@
             group: root
             mode: '0644'
           register: lan_network_copy
+
+        - name: configure guest network
+          copy:
+            src: ./dir/etc/systemd/network/guest.network
+            dest: "/etc/systemd/network/guest.network"
+            owner: root
+            group: root
+            mode: '0644'
+          register: guest_network_copy
 
         - name: configure wan.network
           template:
@@ -607,10 +625,12 @@
                 'restarted' if \
                   lo_net_copy.changed or \
                   lan_netdev_copy.changed or \
+                  guest_netdev_copy.changed or \
                   wan_netdev_copy.changed or \
                   cloaca_link_copy.changed or \
                   cloaca_network_copy.changed or \
                   lan_network_copy.changed or \
+                  guest_network_copy.changed or \
                   wan_network_copy.changed \
                 else \
                   'started' \
