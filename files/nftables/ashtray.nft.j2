@@ -5,7 +5,6 @@ flush ruleset
 {% if ppp_wan %}
 define PPP_MASTER_IFACE = wan
 define WAN_IFACE = ppp0
-define LAN_IFACE = lan
 {% else %}
 define WAN_IFACE = wan
 {% endif %}
