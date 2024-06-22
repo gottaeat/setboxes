@@ -50,7 +50,11 @@ options {
     pid-file "/run/named/named.pid";
     dump-file "/tmp/named_dump.db";
 
+{% if 'routers' in group_names %}
+    listen-on { "loopback"; };
+{% else %}
     listen-on { any; };
+{% endif %}
     listen-on-v6 { none; };
 
 {% if 'routers' in group_names %}
@@ -121,7 +125,6 @@ view "recurse" {
     };
 {% endif %}
 
-    include "/var/named/extra.conf";
     include "/tmp/bind/named.conf.local";
 };
 
