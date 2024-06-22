@@ -829,19 +829,7 @@
     zonersyncopts:
       - "--chown=named:named"
       - "--chmod=D750,F640"
-      - "--exclude=zone/37.13.10.jnl"
-      - "--exclude=zone/crib.jnl"
-      - "--exclude=extra.conf"
-  roles:
-    - role: ansible-resolv
-      vars:
-        resolv_nameservers:
-          - "10.0.99.0"
-        resolv_search:
-          - "crib"
-          - "lichen"
-          - "lichenraw"
-  pre_tasks:
+  tasks:
     - name: copy over systemd overrides
       copy:
         src: ./dir/etc/systemd/system/named.service.d
@@ -867,30 +855,6 @@
         - { src: named.conf.j2, dest: /etc/named.conf }
         - { src: rndc.conf, dest: /etc/rndc.conf }
       register: base_named_copy
-
-    # dhcpd does inplace edits on these files on lease actions
-    - name: check if zone files already exist
-      block:
-        - name: check crib A zone file
-          stat:
-            path: /var/named/zone/37.13.10
-          register: named_azone
-
-        - name: check crib PTR zone file
-          stat:
-            path: /var/named/zone/crib
-          register: named_ptrzone
-
-        - name: do not overwrite crib A zone file
-          set_fact:
-            zonersyncopts: "{{ zonersyncopts + ['--exclude=zone/crib'] }}"
-          when: named_azone.stat.exists
-
-        - name: do not overwrite crib PTR zone file
-          set_fact:
-            zonersyncopts: "{{ zonersyncopts + ['--exclude=zone/37.13.10'] }}"
-          when: named_ptrzone.stat.exists
-      when: "'routers' in group_names"
 
     - name: zonefiles
       ansible.posix.synchronize:
@@ -948,33 +912,20 @@
               }}"
             enabled: true
 
-- name: configure isc dhcpd(v4)
-  hosts: routers
-  become: true
-  tasks:
-    - name: configure dhcpd4
+    - name: set /etc/resolv.conf
       copy:
-        src: ./dir/etc/dhcpd.conf
-        dest: /etc
+        content: |
+          nameserver 10.0.99.0
+        dest: "/etc/resolv.conf"
         owner: root
         group: root
         mode: '0644'
-      register: dhcpdconf_copy
 
-    - name: set dhcpd status
-      block:
-        - name: enabled by default
-          systemd_service:
-            name: dhcpd4
-            enabled: true
-
-        - name: triggers
-          systemd_service:
-            name: dhcpd4
-            state:
-              "{{ 'restarted' if dhcpdconf_copy.changed else 'started' }}"
-            enabled: true
-          when: not in_vm
+    - name: mask systemd-resolved
+      systemd_service:
+        name: systemd-resolved
+        enabled: false
+        masked: true
 
 - name: configure docker
   hosts: crib
