@@ -8,7 +8,8 @@ define WAN_IFACE = ppp0
 {% else %}
 define WAN_IFACE = wan
 {% endif %}
-define LAN_IFACE = lan
+define LAN_CRIB_IFACE = lan
+define LAN_GUEST_IFACE = lan_guest_veth0
 
 # vpn
 define VPN_UDP_IFACE = lichen
@@ -28,17 +29,21 @@ table ip ashtray {
         type filter hook input priority filter; policy drop;
         iifname "lo" counter accept
         ct state established,related counter accept
-        iifname $LAN_IFACE counter accept
+        iifname $LAN_CRIB_IFACE counter accept
         iifname $NETNS_IF counter accept
         iifname $VPN_IF counter accept
         iifname $WAN_IFACE icmp type echo-request counter accept
+        # guest lan: allow -> wan and udp/tcp 53 dnsmasq can hit named
+        iifname $LAN_GUEST_IFACE oifname $WAN_IFACE counter accept
+        iifname $LAN_GUEST_IFACE udp dport 53 counter accept
+        iifname $LAN_GUEST_IFACE tcp dport 53 counter accept
     }
 
     # FILTER<-FORWARD (filter)
     chain filter_forward {
         type filter hook forward priority filter; policy drop;
         ct state established,related counter accept
-        iifname $LAN_IFACE counter accept
+        iifname $LAN_CRIB_IFACE counter accept
         iifname $NETNS_IF counter accept
         iifname $VPN_IF counter accept
 {% if ppp_wan %}
@@ -46,6 +51,8 @@ table ip ashtray {
 {% else %}
         iifname $WAN_IFACE oifname $NETNS_IF counter accept
 {% endif %}
+        # guest lan: allow forward only to wan
+        iifname $LAN_GUEST_IFACE oifname $WAN_IFACE counter accept
     }
 
     # FILTER<-FORWARD (mangle)
@@ -63,7 +70,7 @@ table ip ashtray {
     # NAT<-POSTROUTING
     chain postrouting {
         type nat hook postrouting priority srcnat; policy accept;
-        iifname $LAN_IFACE oifname $WAN_IFACE counter masquerade
+        iifname { $LAN_CRIB_IFACE, $LAN_GUEST_IFACE } oifname $WAN_IFACE counter masquerade
         iifname $NETNS_IF oifname { $WAN_IFACE, $VPN_IF } counter masquerade
         iifname $VPN_IF oifname $WAN_IFACE counter masquerade
     }
