@@ -132,7 +132,6 @@ main_pkgs_desktop_extra:
   - networkmanager
 
 main_pkgs_router:
-  - dhcp
   - ppp
 
 main_pkgs_bios:
