@@ -6,7 +6,6 @@ Requires=lan_guest_ns.service
 After=lan_guest_ns.service
 
 [Service]
-Type=forking
 PrivateNetwork=Yes
 PrivateMounts=No
 
