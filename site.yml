@@ -527,14 +527,14 @@
     - name: router specific networkd configuration
       block:
         # - - vlans - - #
-        - name: configure lan vlan
+        - name: configure crib vlan
           copy:
-            src: ./dir/etc/systemd/network/01-lan.netdev
-            dest: "/etc/systemd/network/01-lan.netdev"
+            src: ./dir/etc/systemd/network/01-crib.netdev
+            dest: "/etc/systemd/network/01-crib.netdev"
             owner: root
             group: root
             mode: '0644'
-          register: lan_netdev_copy
+          register: crib_netdev_copy
 
         - name: configure guest vlan
           copy:
@@ -574,14 +574,14 @@
             mode: '0644'
           register: cloaca_network_copy
 
-        - name: configure lan network
+        - name: configure crib network
           template:
-            src: ./dir/etc/systemd/network/lan.network.j2
-            dest: "/etc/systemd/network/lan.network"
+            src: ./dir/etc/systemd/network/crib.network.j2
+            dest: "/etc/systemd/network/crib.network"
             owner: root
             group: root
             mode: '0644'
-          register: lan_network_copy
+          register: crib_network_copy
 
         - name: configure guest network
           copy:
@@ -624,12 +624,12 @@
               "{{ \
                 'restarted' if \
                   lo_net_copy.changed or \
-                  lan_netdev_copy.changed or \
+                  crib_netdev_copy.changed or \
                   guest_netdev_copy.changed or \
                   wan_netdev_copy.changed or \
                   cloaca_link_copy.changed or \
                   cloaca_network_copy.changed or \
-                  lan_network_copy.changed or \
+                  crib_network_copy.changed or \
                   guest_network_copy.changed or \
                   wan_network_copy.changed \
                 else \
