@@ -27,13 +27,19 @@ ExecStart=nsenter -t 1 -n -- ip link set lan_guest_veth1 netns lan_guest
 ExecStart=ip addr add 10.69.1.1/31 dev lan_guest_veth1
 ExecStart=ip link set lan_guest_veth1 up
 
-# set lan_guest default route
-ExecStart=ip route add default via 10.69.1.0 dev lan_guest_veth1
-
 # move guest to lan_guest ns
 ExecStart=nsenter -t 1 -n -- ip link set guest netns lan_guest
 ExecStart=ip addr add 10.13.36.1/24 dev guest
 ExecStart=ip link set guest up
+
+# set lan_guest default route
+ExecStart=ip route add default via 10.69.1.0 dev lan_guest_veth1
+
+# masquerade
+ExecStart=nft flush ruleset
+ExecStart=nft 'add table ip lan_guest'
+ExecStart=nft 'add chain ip lan_guest postrouting { type nat hook postrouting priority srcnat; policy accept; };'
+ExecStart=nft 'add rule ip lan_guest postrouting oifname lan_guest_veth1 counter masquerade'
 
 # move guest back to pid 1 ns and remove lan_guest ns 
 ExecStop=ip link set guest netns 1
