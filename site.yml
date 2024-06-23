@@ -642,6 +642,7 @@
   hosts: routers
   become: true
   tasks:
+    # lan_guest namespace creation
     - name: copy over the systemd unit
       copy:
         src: ./dir/etc/systemd/system/lan_guest_ns.service
@@ -661,13 +662,59 @@
         - name: enabled by default, if not in a vm
           systemd_service:
             name: lan_guest_ns
-            enable: true
+            enabled: true
           when: in_vm
 
         - name: triggers, when on baremetal
           systemd_service:
             name: lan_guest_ns
-            state: "{{ 'reloaded' if lan_guest_ns_copy.changed else 'started' }}"
+            state: "{{ 'restarted' if lan_guest_ns_copy.changed else 'started' }}"
+            enabled: true
+          when: not in_vm
+
+    # dnsmasq for lan_guest_ns
+    - name: copy over the dnsmasq configuration
+      copy:
+        src: ./dir/mss/etc/dnsmasq_guest.conf
+        dest: /mss/etc/
+        owner: root
+        group: root
+        mode: '0644'
+      register: dnsmasq_guest_conf_copy
+
+    - name: copy over the systemd unit
+      copy:
+        src: ./dir/etc/systemd/system/dnsmasq_guest.service
+        dest: /etc/systemd/system/
+        owner: root
+        group: root
+        mode: '0644'
+      register: dnsmasq_guest_copy
+
+    - name: daemon reload
+      systemd_service:
+        daemon_reload: true
+      when: dnsmasq_guest_copy.changed
+
+    - name: set dnsmasq_guest state
+      block:
+        - name: enabled by default, if not in a vm
+          systemd_service:
+            name: dnsmasq_guest
+            enabled: true
+          when: in_vm
+
+        - name: triggers, when on baremetal
+          systemd_service:
+            name: dnsmasq_guest
+            state:
+              "{{ \
+                'restarted' if \
+                  dnsmasq_guest_copy.changed or \
+                  dnsmasq_guest_conf_copy.changed \
+                else \
+                  'started' \
+              }}"
             enabled: true
           when: not in_vm
 
