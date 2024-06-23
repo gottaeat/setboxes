@@ -638,6 +638,39 @@
             enabled: true
           when: "'routers' in group_names and not in_vm"
 
+- name: configure network namespaces
+  hosts: routers
+  become: true
+  tasks:
+    - name: copy over the systemd unit
+      copy:
+        src: ./dir/etc/systemd/system/lan_guest_ns.service
+        dest: /etc/systemd/system/
+        owner: root
+        group: root
+        mode: '0644'
+      register: lan_guest_ns_copy
+
+    - name: daemon reload
+      systemd_service:
+        daemon_reload: true
+      when: lan_guest_ns_copy.changed
+
+    - name: set lan_guest_ns state
+      block:
+        - name: enabled by default, if not in a vm
+          systemd_service:
+            name: lan_guest_ns
+            enable: true
+          when: in_vm
+
+        - name: triggers, when on baremetal
+          systemd_service:
+            name: lan_guest_ns
+            state: "{{ 'reloaded' if lan_guest_ns_copy.changed else 'started' }}"
+            enabled: true
+          when: not in_vm
+
 - name: configure networkmanager
   hosts: desktops
   become: true
