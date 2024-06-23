@@ -8,11 +8,8 @@ define WAN_IFACE = ppp0
 {% else %}
 define WAN_IFACE = wan
 {% endif %}
-define LAN_CRIB_IFACE = lan
+define LAN_CRIB_IFACE = lan_crib_veth0
 define LAN_GUEST_IFACE = lan_guest_veth0
-
-# vpn
-define VPN_UDP_IFACE = lichen
 
 # netns
 define DOCKER_IFACE = docker0
@@ -20,7 +17,6 @@ define DOCKER_NS_IFACE_IP = 10.0.100.1
 
 # groups
 define NETNS_IF = { $DOCKER_IFACE }
-define VPN_IF = { $VPN_UDP_IFACE }
 
 # table
 table ip ashtray {
@@ -31,7 +27,6 @@ table ip ashtray {
         ct state established,related counter accept
         iifname $LAN_CRIB_IFACE counter accept
         iifname $NETNS_IF counter accept
-        iifname $VPN_IF counter accept
         iifname $WAN_IFACE icmp type echo-request counter accept
         # guest lan: allow -> wan and udp/tcp 53 dnsmasq can hit named
         iifname $LAN_GUEST_IFACE oifname $WAN_IFACE counter accept
@@ -45,7 +40,6 @@ table ip ashtray {
         ct state established,related counter accept
         iifname $LAN_CRIB_IFACE counter accept
         iifname $NETNS_IF counter accept
-        iifname $VPN_IF counter accept
 {% if ppp_wan %}
         iifname $WAN_IFACE oifname { $PPP_MASTER_IFACE, $NETNS_IF } counter accept
 {% else %}
@@ -58,8 +52,8 @@ table ip ashtray {
     # FILTER<-FORWARD (mangle)
     chain mangle_forward {
         type filter hook forward priority mangle; policy accept;
-        iifname { $WAN_IFACE, $VPN_IF } tcp flags syn tcp option maxseg size set rt mtu counter
-        oifname { $WAN_IFACE, $VPN_IF } tcp flags syn tcp option maxseg size set rt mtu counter
+        iifname $WAN_IFACE tcp flags syn tcp option maxseg size set rt mtu counter
+        oifname $WAN_IFACE tcp flags syn tcp option maxseg size set rt mtu counter
     }
 
     # FILTER<-OUTPUT
@@ -71,8 +65,7 @@ table ip ashtray {
     chain postrouting {
         type nat hook postrouting priority srcnat; policy accept;
         iifname { $LAN_CRIB_IFACE, $LAN_GUEST_IFACE } oifname $WAN_IFACE counter masquerade
-        iifname $NETNS_IF oifname { $WAN_IFACE, $VPN_IF } counter masquerade
-        iifname $VPN_IF oifname $WAN_IFACE counter masquerade
+        iifname $NETNS_IF oifname $WAN_IFACE counter masquerade
     }
 
     # NAT<-PREROUTING
