@@ -112,6 +112,20 @@ view "recurse" {
     };
 
 {% if 'routers' in group_names %}
+    zone "crib" {
+        type forward;
+        forwarders { 10.69.0.1; };
+        forward only;
+        allow-query { "lan_crib"; "local-box"; };
+    };
+
+    zone "37.13.10.in-addr.arpa" {
+        type forward;
+        forwarders { 10.69.0.1; };
+        forward only;
+        allow-query { "lan_crib"; "local-box"; };
+    };
+
     zone "guest" {
         type forward;
         forwarders { 10.69.1.1; };
