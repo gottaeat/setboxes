@@ -1,0 +1,20 @@
+[Unit]
+Description=dnsmasq instance for the %i network namespace
+JoinsNamespaceOf=lan_%i_ns.service
+BindsTo=lan_%i_ns.service
+Requires=lan_%i_ns.service
+After=lan_%i_ns.service
+
+[Service]
+PrivateNetwork=Yes
+PrivateMounts=No
+
+PIDFile=/var/run/dnsmasq_%i.pid
+
+ExecStartPre=dnsmasq --test -C /mss/etc/dnsmasq_%i.conf
+ExecStart=dnsmasq -k -C /mss/etc/dnsmasq_%i.conf
+ExecReload=kill -HUP $MAINPID
+ExecStop=kill -15 $MAINPID
+
+[Install]
+WantedBy=multi-user.target
