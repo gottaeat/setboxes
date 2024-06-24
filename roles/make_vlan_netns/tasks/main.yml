@@ -54,7 +54,7 @@
           "{{ \
             'restarted' if \
               dnsmasq_conf_copy.changed or \
-              dnsmasq_netns_unitfile_copy.chaned \
+              dnsmasq_netns_unitfile_copy.changed \
             else \
               'started' \
           }}"
