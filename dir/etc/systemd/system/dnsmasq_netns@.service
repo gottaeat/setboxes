@@ -1,5 +1,5 @@
 [Unit]
-Description=dnsmasq instance for the %i network namespace
+Description=dnsmasq instance for the lan_%i network namespace
 JoinsNamespaceOf=lan_%i_ns.service
 BindsTo=lan_%i_ns.service
 Requires=lan_%i_ns.service
