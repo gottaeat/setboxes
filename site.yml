@@ -652,7 +652,6 @@
       with_items: "{{ mss_wireguard_ifaces }}"
       register: wg_config_link
 
-# - - namespaces - - #
 - name: configure network namespace for vlans
   hosts: routers
   become: true
@@ -664,22 +663,32 @@
       vars:
         netns_name: crib
   pre_tasks:
-    - name: install unit files
+    - name: install dnsmasq_netns unit file
       copy:
-        src: "./dir/etc/systemd/system/{{ item }}.service"
+        src: ./dir/etc/systemd/system/dnsmasq_netns@.service
         dest: /etc/systemd/system/
         owner: root
         group: root
         mode: '0644'
-      register: unitfile_copy
-      with_items:
-        - dnsmasq_netns@
-        - wg-quick-lan_crib@
+      register: dnsmasq_netns_unitfile_copy
+
+    - name: install wg-quick-lan_crib unit file
+      copy:
+        src: ./dir/etc/systemd/system/wg-quick-lan_crib@.service
+        dest: /etc/systemd/system/
+        owner: root
+        group: root
+        mode: '0644'
+      register: wg_quick_lan_crib_unitfile_copy
 
     - name: daemon reload
       systemd_service:
         daemon_reload: true
-      when: unitfile_copy.changed
+      when: >-
+        (
+          dnsmasq_netns_unitfile_copy.changed or
+          wg_quick_lan_crib_unitfile_copy.changed
+        )
   tasks:
     - name: configure wireguard instances for lan_crib netns
       block:
@@ -693,12 +702,17 @@
         - name: triggers, when on baremetal
           systemd_service:
             name: "wg-quick-lan_crib@{{ item }}"
-            state: "{{ 'restarted' if wg_config_link.changed else 'started'}}"
+            state:
+              "{{ \
+                'restarted' if \
+                  wg_config_link.changed or \
+                  wg_quick_lan_crib_unitfile_copy.changed \
+                else \
+                  'started' \
+              }}"
             enabled: true
           with_items: "{{ mss_wireguard_ifaces }}"
           when: not in_vm
-
-# - - namespaces end - - #
 
 - name: configure pppd
   hosts: routers
