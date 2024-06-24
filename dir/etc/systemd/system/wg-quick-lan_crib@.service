@@ -1,5 +1,5 @@
 [Unit]
-Description=wireguard tunnel for the crib VLAN
+Description=WireGuard via wg-quick(8) for %I in lan_crib network namespace
 PartOf=wg-quick.target
 
 JoinsNamespaceOf=lan_crib_ns.service
@@ -13,9 +13,9 @@ PrivateMounts=No
 
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/usr/bin/wg-quick up lichen
-ExecStop=/usr/bin/wg-quick down lichen
-ExecReload=/bin/bash -c 'exec /usr/bin/wg syncconf lichen <(exec /usr/bin/wg-quick strip lichen)'
+ExecStart=/usr/bin/wg-quick up %i
+ExecStop=/usr/bin/wg-quick down %i
+ExecReload=/bin/bash -c 'exec /usr/bin/wg syncconf %i <(exec /usr/bin/wg-quick strip %i)'
 Environment=WG_ENDPOINT_RESOLUTION_RETRIES=infinity
 
 [Install]
