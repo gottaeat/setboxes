@@ -652,222 +652,53 @@
       with_items: "{{ mss_wireguard_ifaces }}"
       register: wg_config_link
 
-- name: configure network namespaces
+# - - namespaces - - #
+- name: configure network namespace for vlans
   hosts: routers
   become: true
-  tasks:
-    # - - unit - - #
-    # lan_guest namespace unit
-    - name: copy over the systemd unit
+  roles:
+    - role: make_vlan_netns
+      vars:
+        netns_name: guest
+    - role: make_vlan_netns
+      vars:
+        netns_name: crib
+  pre_tasks:
+    - name: install unit files
       copy:
-        src: ./dir/etc/systemd/system/lan_guest_ns.service
+        src: "./dir/etc/systemd/system/{{ item }}.service"
         dest: /etc/systemd/system/
         owner: root
         group: root
         mode: '0644'
-      register: lan_guest_ns_copy
+      register: unitfile_copy
+      with_items:
+        - dnsmasq_netns@
+        - wg-quick-lan_crib@
 
-    # lan_crib namespace unit
-    - name: copy over the systemd unit
-      copy:
-        src: ./dir/etc/systemd/system/lan_crib_ns.service
-        dest: /etc/systemd/system/
-        owner: root
-        group: root
-        mode: '0644'
-      register: lan_crib_ns_copy
-
-    # lan_guest dnsmasq
-    - name: copy over the systemd unit
-      copy:
-        src: ./dir/etc/systemd/system/dnsmasq_guest.service
-        dest: /etc/systemd/system/
-        owner: root
-        group: root
-        mode: '0644'
-      register: dnsmasq_guest_copy
-
-    # lan_crib dnsmasq
-    - name: copy over the systemd unit
-      copy:
-        src: ./dir/etc/systemd/system/dnsmasq_crib.service
-        dest: /etc/systemd/system/
-        owner: root
-        group: root
-        mode: '0644'
-      register: dnsmasq_crib_copy
-
-    # lan_crib wireguard
-    - name: copy over the systemd unit
-      copy:
-        src: ./dir/etc/systemd/system/wg-lichen-crib.service
-        dest: /etc/systemd/system/
-        owner: root
-        group: root
-        mode: '0644'
-      register: wireguard_crib_copy
-
-    # reload if changed
     - name: daemon reload
       systemd_service:
         daemon_reload: true
-      when: >-
-        (
-          lan_guest_ns_copy.changed or
-          lan_crib_ns_copy.changed or
-          dnsmasq_guest_copy.changed or
-          dnsmasq_crib_copy.changed or
-          wireguard_crib_copy.changed
-        )
-    # - - units end - - #
-
-    # - - service state - - #
-    # lan_guest service
-    - name: set lan_guest_ns state
-      block:
-        - name: enabled by default, if not in a vm
-          systemd_service:
-            name: lan_guest_ns
-            enabled: true
-          when: in_vm
-
-        - name: triggers, when on baremetal
-          systemd_service:
-            name: lan_guest_ns
-            state: "{{ 'restarted' if lan_guest_ns_copy.changed else 'started' }}"
-            enabled: true
-          when: not in_vm
-
-    # lan_crib service
-    - name: set lan_crib_ns state
-      block:
-        - name: enabled by default, if not in a vm
-          systemd_service:
-            name: lan_crib_ns
-            enabled: true
-          when: in_vm
-
-        - name: triggers, when on baremetal
-          systemd_service:
-            name: lan_crib_ns
-            state: "{{ 'restarted' if lan_crib_ns_copy.changed else 'started' }}"
-            enabled: true
-          when: not in_vm
-
-    # lan_guest dnsmasq service
-    - name: copy over the dnsmasq configuration
-      copy:
-        src: ./dir/mss/etc/dnsmasq_guest.conf
-        dest: /mss/etc/
-        owner: root
-        group: root
-        mode: '0644'
-      register: dnsmasq_guest_conf_copy
-
-    - name: set dnsmasq_guest state
-      block:
-        - name: enabled by default, if not in a vm
-          systemd_service:
-            name: dnsmasq_guest
-            enabled: true
-          when: in_vm
-
-        - name: triggers, when on baremetal
-          systemd_service:
-            name: dnsmasq_guest
-            state:
-              "{{ \
-                'restarted' if \
-                  dnsmasq_guest_copy.changed or \
-                  dnsmasq_guest_conf_copy.changed \
-                else \
-                  'started' \
-              }}"
-            enabled: true
-          when: not in_vm
-
-    # lan_crib dnsmasq service
-    - name: copy over the dnsmasq configuration
-      copy:
-        src: ./dir/mss/etc/dnsmasq_crib.conf
-        dest: /mss/etc/
-        owner: root
-        group: root
-        mode: '0644'
-      register: dnsmasq_crib_conf_copy
-
-    - name: set dnsmasq_crib state
-      block:
-        - name: enabled by default, if not in a vm
-          systemd_service:
-            name: dnsmasq_crib
-            enabled: true
-          when: in_vm
-
-        - name: triggers, when on baremetal
-          systemd_service:
-            name: dnsmasq_crib
-            state:
-              "{{ \
-                'restarted' if \
-                  dnsmasq_crib_copy.changed or \
-                  dnsmasq_crib_conf_copy.changed \
-                else \
-                  'started' \
-              }}"
-            enabled: true
-          when: not in_vm
-
-    # lan_crib wireguard service
-    - name: set wg-lichen-crib state
-      block:
-        - name: in vm
-          systemd_service:
-            name: wg-lichen-crib
-            enabled: true
-          when: in_vm
-
-        - name: on baremetal
-          systemd_service:
-            name: wg-lichen-crib
-            state:
-              "{{ \
-                'restarted' if \
-                  wg_config_link.changed or \
-                  wireguard_crib_copy.changed \
-                else \
-                  'started' \
-              }}"
-            enabled: true
-          when: not in_vm
-
-- name: configure networkmanager
-  hosts: desktops
-  become: true
+      when: unitfile_copy.changed
   tasks:
-    - name: copy over networkmanager configuration
-      copy:
-        src: ./dir/etc/NetworkManager/conf.d/
-        dest: /etc/NetworkManager/conf.d/
-        owner: root
-        group: root
-        mode: '0644'
-      register: nm_config_copy
-
-    - name: set networkmanager state
+    - name: configure wireguard instances for lan_crib netns
       block:
-        - name: enabled by default, if not in a vm
+        - name: enabled by default, if in a vm
           systemd_service:
-            name: NetworkManager
+            name: "wg-quick-lan_crib@{{ item }}"
             enabled: true
+          with_items: "{{ mss_wireguard_ifaces }}"
           when: in_vm
 
         - name: triggers, when on baremetal
           systemd_service:
-            name: NetworkManager
-            state: "{{ 'reloaded' if nm_config_copy.changed else 'started' }}"
+            name: "wg-quick-lan_crib@{{ item }}"
+            state: "{{ 'restarted' if wg_config_link.changed else 'started'}}"
             enabled: true
+          with_items: "{{ mss_wireguard_ifaces }}"
           when: not in_vm
+
+# - - namespaces end - - #
 
 - name: configure pppd
   hosts: routers
