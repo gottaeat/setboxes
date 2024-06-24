@@ -44,6 +44,10 @@ ExecStart=nft 'add rule ip lan_crib mangle_forward iifname "lichen" tcp flags sy
 ExecStart=nft 'add rule ip lan_crib mangle_forward oifname "lichen" tcp flags syn tcp option maxseg size set rt mtu counter'
 ExecStart=nft 'add rule ip lan_crib postrouting oifname "lan_crib_veth1" counter masquerade'
 
-# move crib back to pid 1 ns and remove lan_crib ns 
+# add a route to the lan subnet so the router can hit it without netns exec
+ExecStart=nsenter -t 1 -n -- ip route add 10.13.37.0/24 via 10.69.0.1 dev lan_crib_veth0
+
+# move guest back to pid 1 ns and remove lan_crib ns and the static route
+ExecStop=nsenter -t 1 -n -- ip route del 10.13.37.0/24 via 10.69.0.1 dev lan_crib_veth0
 ExecStop=ip link set crib netns 1
 ExecStop=ip netns delete lan_crib
