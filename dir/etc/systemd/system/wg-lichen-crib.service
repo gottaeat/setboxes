@@ -8,6 +8,9 @@ Requires=lan_crib_ns.service
 After=lan_crib_ns.service
 
 [Service]
+PrivateNetwork=Yes
+PrivateMounts=No
+
 Type=oneshot
 RemainAfterExit=yes
 ExecStart=/usr/bin/wg-quick up lichen
