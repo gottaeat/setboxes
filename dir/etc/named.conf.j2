@@ -111,31 +111,45 @@ view "recurse" {
         allow-query { "local-box"; };
     };
 
-{% if 'routers' in group_names %}
     zone "crib" {
         type forward;
+{% if 'routers' in group_names %}
         forwarders { 10.69.0.1; };
+{% else %}
+        forwarders { 10.13.37.1; };
+{% endif %}
         forward only;
     };
 
     zone "37.13.10.in-addr.arpa" {
         type forward;
+{% if 'routers' in group_names %}
         forwarders { 10.69.0.1; };
+{% else %}
+        forwarders { 10.13.37.1; };
+{% endif %}
         forward only;
     };
 
     zone "guest" {
         type forward;
+{% if 'routers' in group_names %}
         forwarders { 10.69.1.1; };
+{% else %}
+        forwarders { 10.13.36.1; };
+{% endif %}
         forward only;
     };
 
     zone "36.13.10.in-addr.arpa" {
         type forward;
+{% if 'routers' in group_names %}
         forwarders { 10.69.1.1; };
+{% else %}
+        forwarders { 10.13.36.1; };
+{% endif %}
         forward only;
     };
-{% endif %}
 
     include "/tmp/bind/named.conf.local";
 };
