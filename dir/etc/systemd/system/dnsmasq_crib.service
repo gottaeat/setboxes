@@ -1,0 +1,20 @@
+[Unit]
+Description=dnsmasq instance for the crib VLAN
+JoinsNamespaceOf=lan_crib_ns.service
+BindsTo=lan_crib_ns.service
+Requires=lan_crib_ns.service
+After=lan_crib_ns.service
+
+[Service]
+PrivateNetwork=Yes
+PrivateMounts=No
+
+PIDFile=/var/run/dnsmasq_crib.pid
+
+ExecStartPre=dnsmasq --test -C /mss/etc/dnsmasq_crib.conf
+ExecStart=dnsmasq -k -C /mss/etc/dnsmasq_crib.conf
+ExecReload=kill -HUP $MAINPID
+ExecStop=kill -15 $MAINPID
+
+[Install]
+WantedBy=multi-user.target
