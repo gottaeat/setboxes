@@ -50,6 +50,13 @@
     - name: triggers, when on baremetal
       systemd_service:
         name: "dnsmasq_netns@{{ netns_name }}.service"
-        state: "{{ 'restarted' if dnsmasq_conf_copy.changed else 'started' }}"
+        state:
+          "{{ \
+            'restarted' if \
+              dnsmasq_conf_copy.changed or \
+              dnsmasq_netns_unitfile_copy.chaned \
+            else \
+              'started' \
+          }}"
         enabled: true
       when: not in_vm
