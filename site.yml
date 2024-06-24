@@ -638,6 +638,20 @@
             enabled: true
           when: "'routers' in group_names and not in_vm"
 
+- name: configure wireguard
+  hosts: crib
+  become: true
+  tasks:
+    - name: create client symlinks for {{ mss_hostname }}
+      file:
+        src: "/mnt/mss/stuff/techy-bits/vpn/lichen/client/{{ mss_hostname }}-{{ item }}.conf"
+        dest: "/etc/wireguard/{{ item }}.conf"
+        state: link
+        force: true
+        follow: false
+      with_items: "{{ mss_wireguard_ifaces }}"
+      register: wg_config_link
+
 - name: configure network namespaces
   hosts: routers
   become: true
@@ -683,6 +697,16 @@
         mode: '0644'
       register: dnsmasq_crib_copy
 
+    # lan_crib wireguard
+    - name: copy over the systemd unit
+      copy:
+        src: ./dir/etc/systemd/system/wg-lichen-crib.service
+        dest: /etc/systemd/system/
+        owner: root
+        group: root
+        mode: '0644'
+      register: wireguard_crib_copy
+
     # reload if changed
     - name: daemon reload
       systemd_service:
@@ -692,7 +716,8 @@
           lan_guest_ns_copy.changed or
           lan_crib_ns_copy.changed or
           dnsmasq_guest_copy.changed or
-          dnsmasq_crib_copy.changed
+          dnsmasq_crib_copy.changed or
+          wireguard_crib_copy.changed
         )
     # - - units end - - #
 
@@ -787,6 +812,29 @@
                 'restarted' if \
                   dnsmasq_crib_copy.changed or \
                   dnsmasq_crib_conf_copy.changed \
+                else \
+                  'started' \
+              }}"
+            enabled: true
+          when: not in_vm
+
+    # lan_crib wireguard service
+    - name: set wg-lichen-crib state
+      block:
+        - name: in vm
+          systemd_service:
+            name: wg-lichen-crib
+            enabled: true
+          when: in_vm
+
+        - name: on baremetal
+          systemd_service:
+            name: wg-lichen-crib
+            state:
+              "{{ \
+                'restarted' if \
+                  wg_config_link.changed or \
+                  wireguard_crib_copy.changed \
                 else \
                   'started' \
               }}"
@@ -944,20 +992,6 @@
             enabled: true
           when: not in_vm
           changed_when: false
-
-- name: configure wireguard
-  hosts: crib
-  become: true
-  tasks:
-    - name: create client symlinks for {{ mss_hostname }}
-      file:
-        src: "/mnt/mss/stuff/techy-bits/vpn/lichen/client/{{ mss_hostname }}-{{ item }}.conf"
-        dest: "/etc/wireguard/{{ item }}.conf"
-        state: link
-        force: true
-        follow: false
-      with_items: "{{ mss_wireguard_ifaces }}"
-      register: wg_config_link
 
 - name: configure bind
   hosts: crib
