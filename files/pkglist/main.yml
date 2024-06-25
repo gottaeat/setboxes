@@ -48,7 +48,6 @@ main_pkgs_base:
   - pacman-contrib
   - partclone
   - patchelf
-  - profanity
   - proxychains-ng
   - python
   - python-black
@@ -94,7 +93,6 @@ main_pkgs_multimedia:
   - mesa-utils
   - mpd
   - mpv
-  - mumble
   - mupdf
   - ncmpcpp
   - noto-fonts-emoji
