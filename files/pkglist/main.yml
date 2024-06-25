@@ -8,6 +8,7 @@ main_pkgs_base:
   - bind
   - binwalk
   - diffutils
+  - dnsmasq
   - dosfstools
   - ethtool
   - fdupes
