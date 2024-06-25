@@ -1,5 +1,6 @@
 [Unit]
-After=sys-subsystem-net-devices-guest.device
+After=sys-subsystem-net-devices-guest.device systemd-networkd.service
+Wants=sys-subsystem-net-devices-guest.device systemd-networkd.service
 
 [Install]
 WantedBy=multi-user.target
