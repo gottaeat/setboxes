@@ -31,17 +31,14 @@ main_pkgs_extra:
   - linux-zen-headers
   - mangohud
   - mesa-vdpau
-  - minetest
   - obs-studio
   - openal
-  - openmw
   - qemu-desktop
   - radeontop
   - rocm-opencl-runtime
   - sshpass
   - steam
   - virt-manager
-  - vlc
   - vulkan-icd-loader
   - vulkan-radeon 
   - wine
@@ -49,8 +46,4 @@ main_pkgs_extra:
   - winetricks
   - xf86-video-amdgpu
 user_pkgs_extra:
-  - dynamips
-  - gns3-gui
-  - gns3-server
-  - ubridge
   - xone-dkms-git
