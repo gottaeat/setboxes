@@ -48,7 +48,6 @@ main_pkgs_base:
   - pacman-contrib
   - partclone
   - patchelf
-  - proxychains-ng
   - python
   - python-black
   - python-lxml
@@ -63,7 +62,6 @@ main_pkgs_base:
   - tcpdump
   - terminus-font
   - tmux
-  - tor
   - udp2raw
   - unrar
   - unzip
@@ -128,6 +126,8 @@ main_pkgs_multimedia:
 main_pkgs_desktop_extra:
   - android-tools
   - networkmanager
+  - proxychains-ng
+  - tor
 
 main_pkgs_router:
   - ppp
