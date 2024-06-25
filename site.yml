@@ -1320,7 +1320,7 @@
         enabled: true
 
 - name: configure tor
-  hosts: crib
+  hosts: desktops
   become: true
   tasks:
     - name: copy over proxychains config
@@ -1331,11 +1331,11 @@
         group: root
         mode: '0644'
 
-    - name: set tor state
-      systemd_service:
-        name: tor
-        state: started
-        enabled: true
+#    - name: set tor state
+#      systemd_service:
+#        name: tor
+#        state: started
+#        enabled: true
 
 - name: configure acpid
   hosts: crib
