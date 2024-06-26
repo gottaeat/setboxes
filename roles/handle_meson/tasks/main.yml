@@ -82,6 +82,17 @@
         modification_time: preserve
         access_time: preserve
       when: not vm_init.stat.exists
+
+    - name: mss-nfqws extras
+      block:
+        - name: daemon reload
+          systemd_service:
+            daemon_reload: true
+
+        - name: note state change
+          set_fact:
+            mss_nfqws_changed: true
+      when: project_name == "mss-nfqws"
   when: >-
     ( in_vm and not vm_init.stat.exists ) or
     ( not in_vm and installed_hash.stdout != head_hash.stdout )
