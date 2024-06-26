@@ -443,6 +443,45 @@
         project_name: "mss-nfqws"
         baremetal_path: "/mnt/mss/stuff/techy-bits/git/mss-nfqws"
         build_dir: "build"
+  tasks:
+    - name: set mss-nfqws to run in guest vlan network namespace
+      block:
+        - name: copy over mss-nfwqs overrides
+          copy:
+            src: ./dir/etc/systemd/system/mss-nfqws.service.d
+            dest: /etc/systemd/system
+            owner: root
+            group: root
+            mode: '0644'
+          register: nfqws_systemd_override
+
+        - name: daemon reload
+          systemd_service:
+            daemon_reload: true
+          when: nfqws_systemd_override.changed
+
+        - name: set mss-nfqws state
+          block:
+            - name: enabled by default, if not in a vm
+              systemd_service:
+                name: mss-nfqws
+                enabled: true
+              when: in_vm
+
+            - name: triggers, when on baremetal (desktops)
+              systemd_service:
+                name: mss-nfqws
+                state:
+                  "{{ \
+                    'restarted' if \
+                      nfqws_systemd_override.changed or \
+                      mss_nfqws_changed is defined \
+                    else \
+                      'started' \
+                  }}"
+                enabled: true
+              when: not in_vm
+      when: "'routers' in group_names"
 
 - name: build utils
   hosts: crib
