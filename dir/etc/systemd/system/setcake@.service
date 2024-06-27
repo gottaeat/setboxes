@@ -1,10 +1,14 @@
 [Unit]
 Description=CAKE SQM instance for %i
 
+After=sys-subsystem-net-devices-%i.device systemd-networkd.service
+Wants=sys-subsystem-net-devices-%i.device systemd-networkd.service
+
 [Service]
 Type=oneshot
+RemainAfterExit=yes
 
-ExecStart = /mss/bin/setcake.py start --iface %i --ifb %i-ingress --down 84 --up 19
+ExecStart = /mss/bin/setcake.py start --iface %i --ifb %i-ingress --down 46 --up 15
 ExecStop = /mss/bin/setcake.py stop --iface %i --ifb %i-ingress
 
 [Install]
