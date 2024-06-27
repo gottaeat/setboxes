@@ -326,9 +326,8 @@
     - name: handle ppp
       modprobe:
         name: ppp_generic
-        persistent: present
-        state: present
-      when: ppp_wan
+        persistent: "{{ 'present' if ppp_wan else 'absent' }}"
+        state: "{{ 'present' if ppp_wan else 'absent' }}"
 
 - name: sysctl configuration
   hosts: crib
