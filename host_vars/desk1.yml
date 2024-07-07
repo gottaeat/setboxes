@@ -34,6 +34,7 @@ main_pkgs_extra:
   - obs-studio
   - openal
   - qemu-desktop
+  - qt5-base
   - radeontop
   - rocm-opencl-runtime
   - sshpass
