@@ -285,8 +285,9 @@
     - name: cleanup pacman
       become_user: aur
       shell: |
-        rm -rf /home/aur/.cache; \
+        rm -rf /home/aur/.cache /home/aur/.config; \
         yay -Scc --noconfirm; \
+        sudo pacman -Scc --noconfirm; \
         sudo pacman -Qtdq | sudo pacman -Rns - --noconfirm; \
         sudo pacman -Qqd | sudo pacman -Rsu - --noconfirm
       ignore_errors: true
