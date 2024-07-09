@@ -237,6 +237,7 @@
             update_cache: true
             upgrade: true
             extra_args: "--ask 4"
+          notify: cleanup pacman
 
         - name: install the packages
           kewlfft.aur.aur:
