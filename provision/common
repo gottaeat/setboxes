@@ -1,3 +1,4 @@
+# vim: set ft=sh:
 c_res="\033[0;39m"
 cb_grn="\033[1;32m"
 cb_red="\033[1;31m"
