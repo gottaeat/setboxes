@@ -5,8 +5,8 @@
     state: present
 
 - name: handle ppp
-  hosts: routers
   modprobe:
     name: ppp_generic
     persistent: "{{ 'present' if ppp_wan else 'absent' }}"
     state: "{{ 'present' if ppp_wan else 'absent' }}"
+  when: "'routers' in group_names"

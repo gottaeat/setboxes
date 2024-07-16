@@ -14,7 +14,6 @@
   register: lo_net_copy
 
 - name: router specific networkd configuration
-  hosts: routers
   block:
     # - - vlans - - #
     - name: configure crib vlan
@@ -90,6 +89,7 @@
         group: root
         mode: '0644'
       register: wan_network_copy
+  when: "'routers' in group_names"
 
 - name: set systemd-networkd state
   block:
@@ -100,15 +100,13 @@
       when: in_vm
 
     - name: triggers, when on baremetal (desktops)
-      hosts: desktops
       systemd_service:
         name: systemd-networkd
         state: "{{ 'restarted' if lo_net_copy.changed else 'started' }}"
         enabled: true
-      when: not in_vm
+      when: "'desktops' in group_names and not in_vm"
 
     - name: triggers, when on baremetal (routers)
-      hosts: routers
       systemd_service:
         name: systemd-networkd
         state:
@@ -127,4 +125,4 @@
               'started' \
           }}"
         enabled: true
-      when: not in_vm
+      when: "'routers' in group_names and not in_vm"

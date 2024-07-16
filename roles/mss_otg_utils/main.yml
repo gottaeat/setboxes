@@ -46,7 +46,6 @@
         force: true
 
 - name: setcake.py service for routers
-  hosts: routers
   block:
     - name: derive wan iface name
       set_fact:
@@ -86,3 +85,4 @@
               }}"
             enabled: true
           when: not in_vm
+  when: "'routers' in group_names"

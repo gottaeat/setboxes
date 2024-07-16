@@ -9,7 +9,6 @@
     build_dir: "build"
 
 - name: set mss-nfqws to run in guest vlan network namespace
-  hosts: routers
   block:
     - name: copy over mss-nfwqs overrides
       copy:
@@ -46,3 +45,4 @@
               }}"
             enabled: true
           when: not in_vm
+  when: "'routers' in group_names"

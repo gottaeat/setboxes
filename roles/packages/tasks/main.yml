@@ -2,19 +2,20 @@
 - name: resolve package list
   block:
     - name: handle desktops group
-      hosts: desktops
       set_fact:
         pkgs: "{{ (pkgs + desktop_pkgs ) }}"
+      when: "'desktops' in group_names"
+
 
     - name: handle routers group
-      hosts: routers
       set_fact:
         pkgs: "{{ (pkgs + main_pkgs_router) }}"
+      when: "'routers' in group_names"
 
     - name: handle bios group
-      hosts: bios
       set_fact:
         pkgs: "{{ (pkgs + main_pkgs_bios)}}"
+      when: "'bios' in group_names"
 
 - name: create aur user
   user:
