@@ -1,5 +1,4 @@
 ---
---
 - name: copy over ntpd config
   copy:
     src: ntp.conf
