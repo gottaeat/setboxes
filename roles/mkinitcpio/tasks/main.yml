@@ -1,7 +1,7 @@
 ---
 - name: copy over mkinitcpio related configuration
   copy:
-    src: "{{ items }}"
+    src: "{{ item }}"
     dest: /etc
     owner: root
     group: root
