@@ -1,0 +1,128 @@
+---
+- name: get rid of bootstrap networking
+  file:
+    path: "/etc/systemd/network/80-dhcp.network"
+    state: absent
+
+- name: configure lo network
+  copy:
+    src: lo.network
+    dest: "/etc/systemd/network/lo.network"
+    owner: root
+    group: root
+    mode: '0644'
+  register: lo_net_copy
+
+- name: router specific networkd configuration
+  block:
+    # - - vlans - - #
+    - name: configure crib vlan
+      copy:
+        src: 01-crib.netdev
+        dest: "/etc/systemd/network/01-crib.netdev"
+        owner: root
+        group: root
+        mode: '0644'
+      register: crib_netdev_copy
+
+    - name: configure guest vlan
+      copy:
+        src: 03-guest.netdev
+        dest: "/etc/systemd/network/03-guest.netdev"
+        owner: root
+        group: root
+        mode: '0644'
+      register: guest_netdev_copy
+
+    - name: configure wan vlan
+      template:
+        src: 02-wan.netdev.j2
+        dest: "/etc/systemd/network/02-wan.netdev"
+        owner: root
+        group: root
+        mode: '0644'
+      register: wan_netdev_copy
+
+    # - - physical - - #
+    - name: configure cloaca link
+      template:
+        src: 04-cloaca.link.j2
+        dest: "/etc/systemd/network/04-cloaca.link"
+        owner: root
+        group: root
+        mode: '0644'
+      register: cloaca_link_copy
+
+    # - - networks - - #
+    - name: configure cloaca network
+      copy:
+        src: cloaca.network
+        dest: "/etc/systemd/network/cloaca.network"
+        owner: root
+        group: root
+        mode: '0644'
+      register: cloaca_network_copy
+
+    - name: configure crib network
+      template:
+        src: crib.network.j2
+        dest: "/etc/systemd/network/crib.network"
+        owner: root
+        group: root
+        mode: '0644'
+      register: crib_network_copy
+
+    - name: configure guest network
+      copy:
+        src: guest.network
+        dest: "/etc/systemd/network/guest.network"
+        owner: root
+        group: root
+        mode: '0644'
+      register: guest_network_copy
+
+    - name: configure wan.network
+      template:
+        src: wan.network.j2
+        dest: "/etc/systemd/network/wan.network"
+        owner: root
+        group: root
+        mode: '0644'
+      register: wan_network_copy
+  when: "'routers' in group_names"
+
+- name: set systemd-networkd state
+  block:
+    - name: enabled by default, if not in a vm
+      systemd_service:
+        name: systemd-networkd
+        enabled: true
+      when: in_vm
+
+    - name: triggers, when on baremetal (desktops)
+      systemd_service:
+        name: systemd-networkd
+        state: "{{ 'restarted' if lo_net_copy.changed else 'started' }}"
+        enabled: true
+      when: "'desktops' in group_names and not in_vm"
+
+    - name: triggers, when on baremetal (routers)
+      systemd_service:
+        name: systemd-networkd
+        state:
+          "{{ \
+            'restarted' if \
+              lo_net_copy.changed or \
+              crib_netdev_copy.changed or \
+              guest_netdev_copy.changed or \
+              wan_netdev_copy.changed or \
+              cloaca_link_copy.changed or \
+              cloaca_network_copy.changed or \
+              crib_network_copy.changed or \
+              guest_network_copy.changed or \
+              wan_network_copy.changed \
+            else \
+              'started' \
+          }}"
+        enabled: true
+      when: "'routers' in group_names and not in_vm"

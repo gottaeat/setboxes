@@ -1,0 +1,59 @@
+---
+- name: template and copy over pap-secrets
+  template:
+    src: pap-secrets.j2
+    dest: /etc/ppp/pap-secrets
+    owner: root
+    group: root
+    mode: '0600'
+  register: secret_copy
+
+- name: template and copy over isp peer config
+  template:
+    src: isp.j2
+    dest: /etc/ppp/peers/isp
+    owner: root
+    group: root
+    mode: '0644'
+  register: isp_copy
+
+- name: copy over options
+  copy:
+    src: options
+    dest: /etc/ppp
+    owner: root
+    group: root
+    mode: '0644'
+  register: ppp_opts_copy
+
+- name: copy over mss-ppp systemd service
+  copy:
+    src: mss-ppp.service
+    dest: /etc/systemd/system
+    owner: root
+    group: root
+    mode: '0644'
+  register: pppsystemd_copy
+
+- name: set pppd state
+  block:
+    - name: enabled by default
+      systemd_service:
+        name: mss-ppp
+        enabled: true
+
+    - name: triggers
+      systemd_service:
+        name: mss-ppp
+        state:
+          "{{ \
+            'restarted' if \
+              secret_copy.changed or \
+              isp_copy.changed or \
+              ppp_opts_copy.changed or \
+              pppsystemd_copy.changed \
+            else \
+              'started' \
+          }}"
+        enabled: true
+      when: not in_vm

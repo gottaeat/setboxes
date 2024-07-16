@@ -1,0 +1,110 @@
+---
+- name: set hostname
+  hostname:
+    name: "{{ mss_hostname }}"
+    use: systemd
+
+- name: set /etc/hosts
+  copy:
+    content: |
+      127.0.0.1 localhost.localdomain localhost
+      127.0.1.1 {{ mss_hostname }} {{ mss_hostname }}
+    dest: "/etc/hosts"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: set locale
+  block:
+    - name: set locale.gen
+      community.general.locale_gen:
+        name: en_US.UTF-8
+        state: present
+
+    - name: set locale.conf
+      copy:
+        content: |
+          LANG=en_US.UTF-8
+        dest: "/etc/locale.conf"
+        owner: root
+        group: root
+        mode: '0644'
+
+- name: set timezone
+  community.general.timezone:
+    name: Europe/Istanbul
+
+- name: set mountpoints
+  block:
+    - name: create mountpoints
+      file:
+        path: "/mnt/mss/{{ item }}"
+        state: directory
+        recurse: false
+      with_items:
+        - archive
+        - externalstuff
+        - iso
+        - stuff
+        - usb
+
+    - name: set fstab
+      copy:
+        content: |
+          /dev/arch/rootfs / ext4 defaults,noatime 0 1
+          /dev/arch/stuff /mnt/mss/stuff ext4 rw,relatime,noatime,data=ordered 0 2
+          /mnt/mss/stuff/techy-bits/home /home/mss auto defaults,nofail,nobootwait,bind 0 0
+          /mnt/mss/stuff/techy-bits/swapfile none swap sw 0 0
+          {{ mss_fstab_extra }}
+        dest: "/etc/fstab"
+        owner: root
+        group: root
+        mode: '0644'
+
+- name: set ipv4
+  ansible.posix.sysctl:
+    name: "{{ item['name'] }}"
+    value: "{{ item['value'] }}"
+    sysctl_file: /etc/sysctl.d/01-ipv4.conf
+    sysctl_set: true
+    reload: true
+    state: present
+  with_items:
+    - { name: "net.ipv4.icmp_echo_ignore_broadcasts", value: 1 }
+    - { name: "net.ipv4.conf.all.accept_source_route", value: 0 }
+    - { name: "net.ipv4.conf.default.accept_source_route", value: 0 }
+    - { name: "net.ipv4.tcp_syncookies", value: 1 }
+    - { name: "net.ipv4.conf.default.accept_redirects", value: 0 }
+    - { name: "net.ipv4.conf.all.send_redirects", value: 0 }
+    - { name: "net.ipv4.conf.default.send_redirects", value: 0 }
+    - { name: "net.ipv4.conf.all.rp_filter", value: 1 }
+    - { name: "net.ipv4.conf.default.rp_filter", value: 1 }
+    - { name: "net.ipv4.conf.all.log_martians", value: 1 }
+    - { name: "net.ipv4.conf.default.log_martians", value: 1 }
+    - { name: "net.ipv4.ip_dynaddr", value: 2 }
+    - { name: "net.ipv4.tcp_ecn", value: 0 }
+    - { name: "net.ipv4.ip_forward", value: 1 }
+
+- name: check ipv6 presence
+  stat:
+    path: /proc/sys/net/ipv6
+  register: ipv6_exists
+
+- name: set ipv6
+  ansible.posix.sysctl:
+    name: "{{ item['name'] }}"
+    value: "{{ item['value'] }}"
+    sysctl_file: /etc/sysctl.d/02-ipv6.conf
+    sysctl_set: "{{ 'true' if ipv6_exists.stat.exists else 'false' }}"
+    reload: "{{ 'true' if ipv6_exists.stat.exists else 'false' }}"
+    state: present
+  with_items:
+    - { name: "net.ipv6.conf.all.disable_ipv6", value: 1 }
+    - { name: "net.ipv6.conf.default.disable_ipv6", value: 1 }
+
+- name: enable sysrq
+  ansible.posix.sysctl:
+    name: kernel.sysrq
+    value: '1'
+    sysctl_file: /usr/lib/sysctl.d/50-default.conf
+    reload: false

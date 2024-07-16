@@ -1,0 +1,15 @@
+---
+- name: copy over ntpd config
+  copy:
+    src: ntp.conf
+    dest: /etc
+    owner: root
+    group: root
+    mode: '0644'
+  register: ntpd_copy
+
+- name: set ntpd state
+  systemd_service:
+    name: ntpd
+    state: "{{ 'restarted' if ntpd_copy.changed else 'started' }}"
+    enabled: true

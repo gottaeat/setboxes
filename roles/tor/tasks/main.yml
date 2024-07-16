@@ -1,0 +1,14 @@
+---
+- name: copy over proxychains config
+  copy:
+    src: proxychains.conf
+    dest: /etc
+    owner: root
+    group: root
+    mode: '0644'
+
+# - name: set tor state
+#   systemd_service:
+#     name: tor
+#     state: started
+#     enabled: true

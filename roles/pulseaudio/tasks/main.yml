@@ -1,0 +1,85 @@
+---
+# need to take a reboot for this normally, but this file never changes and
+# it gets copied over when we're setting up in the vm, should not fuck
+# anything up
+- name: copy over dbus policy overrides
+  copy:
+    src: pulseaudio.conf
+    dest: /usr/share/dbus-1/system.d/
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: configure user pulse
+  block:
+    - name: add pulseaudio groups
+      group:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - pulse
+        - pulse-access
+
+    - name: add pulse user
+      user:
+        name: pulse
+        group: pulse
+        groups: audio
+        append: false
+        system: true
+        create_home: true
+        home: /var/run/pulse
+        skeleton: /dev/null
+        expires: -1
+        state: present
+
+- name: copy over pulseaudio configuration
+  copy:
+    src: "pulse/{{ item }}.conf"
+    dest: /etc/pulse/
+    owner: root
+    group: root
+    mode: '0644'
+  with_items:
+    - client
+    - daemon
+  register: pulseconf_copy
+
+- name: set pulseaudio to use the socket
+  replace:
+    path: "/etc/pulse/{{ item }}.pa"
+    regexp: "^load-module module-native-protocol-unix$"
+    replace: "load-module module-native-protocol-unix auth-anonymous=1 socket=/var/run/pulse/native"
+  with_items:
+    - default
+    - system
+  register: pulsepa_modify
+
+- name: copy over pulseaudio systemd service
+  copy:
+    src: pulseaudio.service
+    dest: /etc/systemd/system
+    owner: root
+    group: root
+    mode: '0644'
+  register: pulsesystemd_copy
+
+- name: add user mss to group pulse-access
+  user:
+    name: mss
+    groups: pulse-access
+    append: true
+
+- name: set pulseaudio state
+  systemd_service:
+    name: pulseaudio
+    state:
+      "{{ \
+        'restarted' if \
+          pulseconf_copy.changed or \
+          pulsepa_modify.changed or \
+          pulsesystemd_copy.changed \
+        else \
+          'started' \
+      }}"
+    enabled: true

@@ -1,0 +1,22 @@
+---
+- name: configure thinkfan
+  block:
+    - name: generate thinkfan config
+      script:
+        cmd: gen_thinkfan_conf.py
+        creates: /etc/thinkfan.conf
+      register: thinkfan_conf_copy
+
+    - name: set thinkfan state
+      block:
+        - name: enabled by default
+          systemd_service:
+            name: thinkfan
+            enabled: true
+
+        - name: triggers
+          systemd_service:
+            name: thinkfan
+            state: "{{ 'restarted' if thinkfan_conf_copy.changed else 'started' }}"
+            enabled: true
+  when: not in_vm

@@ -1,0 +1,21 @@
+---
+- name: bulk enable extra services
+  systemd_service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  with_items:
+    - gpm
+    - vnstat
+
+- name: enable but do not start module cleanup
+  systemd_service:
+    name: linux-modules-cleanup
+    enabled: true
+
+- name: enable qbittorrent
+  systemd_service:
+    name: qbittorrent-nox@mss.service
+    state: started
+    enabled: true
+  when: "'qbittorrent-nox' in pkgs"

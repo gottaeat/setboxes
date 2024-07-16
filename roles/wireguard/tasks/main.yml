@@ -1,0 +1,10 @@
+---
+- name: create client symlinks for {{ mss_hostname }}
+  file:
+    src: "/mnt/mss/stuff/techy-bits/vpn/lichen/client/{{ mss_hostname }}-{{ item }}.conf"
+    dest: "/etc/wireguard/{{ item }}.conf"
+    state: link
+    force: true
+    follow: false
+  with_items: "{{ mss_wireguard_ifaces }}"
+  register: wg_config_link

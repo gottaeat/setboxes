@@ -1,14 +1,18 @@
 ---
 mss_hostname: solitude
+
 mss_fstab_extra: |
   /dev/sda1 /boot vfat defaults 0 0
+
 mss_wireguard_ifaces:
   - lichen
   - lichenraw
+
 main_pkgs_extra:
   - acpid
   - efibootmgr
   - intel-ucode
   - libva-intel-driver
+
 user_pkgs_extra:
   - thinkfan

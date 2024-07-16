@@ -1,0 +1,136 @@
+---
+- name: set up libvirt service
+  block:
+    - name: copy over libvirtdns service
+      copy:
+        src: libvirtdns.service
+        dest: /etc/systemd/system
+        owner: root
+        group: root
+        mode: '0644'
+      register: libvirtdns_copy
+
+    - name: copy over libvirtd overrides
+      copy:
+        src: libvirtd.service.d
+        dest: /etc/systemd/system
+        owner: root
+        group: root
+        mode: '0644'
+      register: libvirtd_systemd_override
+
+    - name: handle libvirt changes
+      block:
+        - name: daemon reload
+          systemd_service:
+            daemon_reload: true
+
+        - name: stop all in order
+          systemd_service:
+            name: "{{ item }}"
+            state: stopped
+            enabled: true
+          with_items:
+            - libvirtd.service
+            - virtlogd.service
+            - libvirtd-admin.socket
+            - libvirtd-ro.socket
+            - libvirtd.socket
+            - virtlockd.socket
+            - virtlogd.socket
+      when: >-
+        (
+          libvirtd_systemd_override.changed or
+          libvirtdns_copy.changed
+        )
+
+- name: set libvirt state
+  block:
+    # set to never change because this kicks off other components and
+    # goes inactive, we care for failure, not change in this case.
+    - name: set libvirtd
+      systemd_service:
+        name: libvirtd
+        state: started
+        enabled: true
+      changed_when: false
+
+    - name: set virtlogd
+      systemd_service:
+        name: virtlogd
+        state: started
+        enabled: false
+      changed_when: false
+
+- name: add user mss to group libvirt
+  user:
+    name: mss
+    groups: libvirt
+    append: true
+
+- name: set up boxes
+  block:
+    - name: define networks
+      community.libvirt.virt_net:
+        command: define
+        name: "{{ item.name }}"
+        xml: '{{ lookup("file", item.xml) }}'
+      with_items:
+        - { name: "gat", xml: "virtxml/net_gat.xml" }
+        - { name: "cumvirt", xml: "virtxml/net_cumvirt.xml" }
+
+    - name: define pools
+      community.libvirt.virt_pool:
+        command: define
+        name: "{{ item.name }}"
+        xml: '{{ lookup("file", item.xml) }}'
+      with_items:
+        - { name: "cumvirt", xml: "virtxml/pool_cumvirt.xml" }
+        - { name: "gat", xml: "virtxml/pool_gat.xml" }
+        - { name: "iso", xml: "virtxml/pool_iso.xml" }
+
+    - name: set status
+      block:
+        - name: activate networks
+          community.libvirt.virt_net:
+            state: active
+            name: "{{ item }}"
+          with_items:
+            - cumvirt
+            - gat
+
+        - name: autostart networks
+          community.libvirt.virt_net:
+            autostart: true
+            name: "{{ item }}"
+          with_items:
+            - cumvirt
+            - gat
+
+        - name: activate pools
+          community.libvirt.virt_pool:
+            state: active
+            name: "{{ item }}"
+          with_items:
+            - cumvirt
+            - gat
+            - iso
+
+        - name: autostart networks
+          community.libvirt.virt_pool:
+            autostart: true
+            name: "{{ item }}"
+          with_items:
+            - cumvirt
+            - gat
+            - iso
+
+        - name: define domains
+          community.libvirt.virt:
+            command: define
+            autostart: false
+            xml: '{{ lookup("file", item) }}'
+          with_items:
+            - virtxml/dom_win10-ltsc-21h2.xml
+          changed_when: false
+      when: not in_vm

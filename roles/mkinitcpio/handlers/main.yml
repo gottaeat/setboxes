@@ -1,0 +1,6 @@
+---
+- name: initramfs rebuild
+  shell:
+    cmd: |
+      mkinitcpio -P
+  when: not in_vm

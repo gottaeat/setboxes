@@ -1,0 +1,15 @@
+---
+- name: copy over mkinitcpio related configuration
+  copy:
+    src: "{{ item }}"
+    dest: /etc
+    owner: root
+    group: root
+    mode: '0644'
+  with_items:
+    - vconsole.conf
+    - mkinitcpio.conf
+  notify: initramfs rebuild
+
+- name: trigger handlers
+  meta: flush_handlers

@@ -1,9 +1,0 @@
----
-user_pkgs_base:
-  - fbcat
-  - ookla-speedtest-bin
-user_pkgs_multimedia:
-  - chromium-widevine
-  - dragon-drop
-  - ttf-ms-fonts
-  - ungoogled-chromium-bin

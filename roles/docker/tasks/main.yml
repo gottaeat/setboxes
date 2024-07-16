@@ -1,0 +1,65 @@
+---
+- name: copy over dockerns service
+  copy:
+    src: dockerns.service
+    dest: /etc/systemd/system
+    owner: root
+    group: root
+    mode: '0644'
+  register: dockerns_copy
+
+- name: copy over docker overrides
+  copy:
+    src: docker.service.d
+    dest: /etc/systemd/system
+    owner: root
+    group: root
+    mode: '0644'
+  register: docker_systemd_override
+
+- name: modify docker and containerd LimitNOFILE
+  replace:
+    path: "/usr/lib/systemd/system/{{ item }}.service"
+    regexp: 'LimitNOFILE=infinity'
+    replace: 'LimitNOFILE=1024:524288'
+  with_items:
+    - containerd
+    - docker
+  register: docker_systemd_file_replace
+
+- name: handle docker changes
+  block:
+    - name: daemon reload
+      systemd_service:
+        daemon_reload: true
+
+    - name: stop all in order
+      systemd_service:
+        name: "{{ item }}"
+        state: stopped
+        enabled: true
+      with_items:
+        - docker.service
+        - docker.socket
+        - containerd.service
+        - dockerns.service
+  when: >-
+    (
+      dockerns_copy.changed or
+      docker_systemd_override.changed or
+      docker_systemd_file_replace.changed
+    )
+
+# dockerns is a dep of docker<-containerd, running docker automatically
+# runs dockerns.
+- name: set docker state
+  systemd_service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: add user mss to group docker
+  user:
+    name: mss
+    groups: docker
+    append: true

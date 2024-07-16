@@ -73,7 +73,7 @@ main(){
             pinfo "boot order is now:"
             efibootmgr -u
         else
-            cat ../dir/etc/default/grub \
+            cat ./misc/grub_template \
                 | sed "s|REPLACEMECMDLINE|${_CMDLINE}|g" \
             > /etc/default/grub
 

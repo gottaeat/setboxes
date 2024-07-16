@@ -1,0 +1,31 @@
+---
+- name: copy nftables.conf to /etc
+  template:
+    src: >-
+      {{ mss_hostname + ('.nft.j2' if 'routers' in group_names else '.nft') }}
+    dest: /etc/nftables.conf
+    owner: root
+    group: root
+    mode: '0700'
+  register: nftables_copy
+
+- name: mask iptables
+  systemd_service:
+    name: iptables
+    masked: true
+
+- name: set nftables state
+  block:
+    - name: enabled by default, if not in a vm
+      systemd_service:
+        name: nftables
+        enabled: true
+      when: in_vm
+
+    - name: triggers, when on baremetal
+      systemd_service:
+        name: nftables
+        state: "{{ 'restarted' if nftables_copy.changed else 'started' }}"
+        enabled: true
+      when: not in_vm
+      changed_when: false
