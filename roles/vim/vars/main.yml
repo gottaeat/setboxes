@@ -1,4 +1,3 @@
 ---
-vars:
-  dir: [ ['/root', 'root'], ['/home/mss', 'mss'] ]
-  subdir: [ 'backups', 'swaps' ]
+dir: [ ['/root', 'root'], ['/home/mss', 'mss'] ]
+subdir: [ 'backups', 'swaps' ]
