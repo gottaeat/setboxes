@@ -16,22 +16,21 @@
     # software
     - role: vim
     - role: x11
-      hosts: desktops
+      when: "'desktops' in group_names"
     # mss-wares
     - role: mss_otg_utils
     - role: mss_otg_landfill
-      hosts: desktops
+      when: "'desktops' in group_names"
     - role: mss_nfqws
     # networking
     - role: systemd_networkd
     - role: wireguard
     - role: router_netns
-      hosts: routers
+      when: "'routers' in group_names"
     - role: networkmanager
-      hosts: desktops
+      when: "'desktops' in group_names"
     - role: pppd
-      hosts: routers
-      when: ppp_wan
+      when: "'routers' in group_names and ppp_wan"
     # services
     - role: systemd_logind
     - role: nftables
@@ -41,12 +40,12 @@
     - role: libvirt
       when: "'libvirt' in pkgs"
     - role: pulseaudio
-      hosts: desktops
+      when: "'desktops' in group_names"
     - role: mpd
-      hosts: desktops
+      when: "'desktops' in group_names"
     - role: ntpd
     - role: tor
-      hosts: desktops
+      when: "'desktops' in group_names"
     - role: acpid
       when: "'acpid' in pkgs"
     - role: thinkfan

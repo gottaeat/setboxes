@@ -8,5 +8,5 @@
     - "{{ vaultdir }}/setboxes/pass.yml"
   roles:
     - role: convert_boot
-      hosts: bios
+      when: "'bios' in group_names"
     - role: initialize
