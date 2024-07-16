@@ -1,9 +1,12 @@
 ---
 mss_hostname: gat
+
 mss_fstab_extra: |
   /dev/sda1 /boot vfat defaults 0 0
+
 mss_wireguard_ifaces:
   - lichen
+
 main_pkgs_extra:
   - aarch64-linux-gnu-gcc
   - amd-ucode
@@ -46,5 +49,6 @@ main_pkgs_extra:
   - wine-mono
   - winetricks
   - xf86-video-amdgpu
+
 user_pkgs_extra:
   - xone-dkms-git

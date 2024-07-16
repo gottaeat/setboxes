@@ -154,6 +154,7 @@ main_pkgs_wlan_tools:
 user_pkgs_base:
   - fbcat
   - ookla-speedtest-bin
+
 user_pkgs_multimedia:
   - chromium-widevine
   - dragon-drop
