@@ -1,0 +1,14 @@
+---
+- name: flush logs
+  shell:
+    cmd: |
+      journalctl --flush &&
+      journalctl --rotate &&
+      journalctl --vacuum-time=1s
+  changed_when: false
+
+- name: trim
+  shell:
+    cmd: |
+      fstrim -va
+  changed_when: false

@@ -1,0 +1,123 @@
+---
+- name: resolve package list
+  block:
+    - name: handle desktops group
+      hosts: desktops
+      set_fact:
+        pkgs: "{{ (pkgs + desktop_pkgs ) }}"
+
+    - name: handle routers group
+      hosts: routers
+      set_fact:
+        pkgs: "{{ (pkgs + main_pkgs_router) }}"
+
+    - name: handle bios group
+      hosts: bios
+      set_fact:
+        pkgs: "{{ (pkgs + main_pkgs_bios)}}"
+
+- name: create aur user
+  user:
+    name: aur
+    group: wheel
+    append: false
+    create_home: true
+    skeleton: /dev/null
+    expires: -1
+    state: present
+
+- name: allow aur to run pacman as root w/o a password
+  copy:
+    content: |
+      aur ALL=(ALL) NOPASSWD: /usr/bin/pacman
+    dest: /etc/sudoers.d/aur
+    owner: root
+    group: root
+    mode: '0400'
+
+- name: check if yay is installed
+  stat:
+    path: /usr/bin/yay
+  register: yay_installed
+
+- name: build yay
+  become_user: aur
+  block:
+    - name: install yay build deps
+      become_user: root
+      community.general.pacman:
+        name:
+          - git
+          - go
+          - base-devel
+        update_cache: true
+        state: present
+        extra_args: "--ask 4"
+
+    - name: clone repo
+      git:
+        repo: "https://aur.archlinux.org/yay.git"
+        dest: /tmp/yay
+        depth: 1
+        recursive: true
+
+    - name: build and install yay
+      shell:
+        chdir: /tmp/yay
+        cmd: |
+            makepkg -sri --noconfirm
+  when: not yay_installed.stat.exists
+
+- name: install aur packages
+  become_user: aur
+  block:
+    - name: update and upgrade
+      kewlfft.aur.aur:
+        use: yay
+        aur_only: false
+        update_cache: true
+        upgrade: true
+        extra_args: "--ask 4"
+      notify: cleanup pacman
+
+    - name: install the packages
+      kewlfft.aur.aur:
+        name: "{{ pkgs }}"
+        use: yay
+        aur_only: false
+        extra_args: "--ask 4 --asexplicit"
+      notify: cleanup pacman
+
+- name: remove grub residue left over from bootstrap image on EFI hosts
+  block:
+    - name: remove the grub package
+      community.general.pacman:
+        name: grub
+        state: absent
+        extra_args: "--ask 4"
+      notify: cleanup pacman
+
+    - name: remove grub residue in the boot partition
+      file:
+        path: "/boot/{{ item }}"
+        state: absent
+      with_items:
+        - EFI
+        - grub
+  when: "'bios' not in group_names"
+
+- name: handle groups
+  block:
+    - name: add user mss to group adbusers
+      user:
+        name: mss
+        groups: adbusers
+        append: true
+      when: '"android-tools" in pkgs'
+
+    - name: add user mss to group wireshark
+      user:
+        name: mss
+        groups: wireshark
+        append: true
+      when: '"wireshark-qt" in pkgs'

@@ -1,0 +1,48 @@
+---
+- name: build mss-nfqws
+  include_role:
+    name: handle_meson
+  vars:
+    project_url: "https://github.com/gottaeat/mss-nfqws"
+    project_name: "mss-nfqws"
+    baremetal_path: "/mnt/mss/stuff/techy-bits/git/mss-nfqws"
+    build_dir: "build"
+
+- name: set mss-nfqws to run in guest vlan network namespace
+  hosts: routers
+  block:
+    - name: copy over mss-nfwqs overrides
+      copy:
+        src: mss-nfqws.service.d
+        dest: /etc/systemd/system
+        owner: root
+        group: root
+        mode: '0644'
+      register: nfqws_systemd_override
+
+    - name: daemon reload
+      systemd_service:
+        daemon_reload: true
+      when: nfqws_systemd_override.changed
+
+    - name: set mss-nfqws state
+      block:
+        - name: enabled by default, if not in a vm
+          systemd_service:
+            name: mss-nfqws
+            enabled: true
+          when: in_vm
+
+        - name: triggers, when on baremetal
+          systemd_service:
+            name: mss-nfqws
+            state:
+              "{{ \
+                'restarted' if \
+                  nfqws_systemd_override.changed or \
+                  mss_nfqws_changed is defined \
+                else \
+                  'started' \
+              }}"
+            enabled: true
+          when: not in_vm

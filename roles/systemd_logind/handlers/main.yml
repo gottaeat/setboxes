@@ -1,0 +1,6 @@
+---
+- name: restart logind
+  systemd_service:
+    name: systemd-logind
+    state: restarted
+    enabled: true

@@ -65,7 +65,7 @@
   block:
     - name: copy sshd configuration
       copy:
-        src: ./dir/etc/ssh/sshd_config
+        src: ssh/sshd_config
         dest: /etc/ssh
         owner: root
         group: root
@@ -74,7 +74,7 @@
 
     - name: copy banner
       copy:
-        src: "./files/banners/{{ mss_hostname }}"
+        src: "banners/{{ mss_hostname }}"
         dest: /etc/ssh/banner
         owner: root
         group: root

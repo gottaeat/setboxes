@@ -1,0 +1,9 @@
+---
+- name: build mss-otg<-landfill
+  include_role:
+    name: handle_meson
+  vars:
+    project_url: "https://github.com/gottaeat/mss-otg"
+    project_name: "otg-landfill"
+    baremetal_path: "/mnt/mss/stuff/techy-bits/git/mss-otg"
+    build_dir: "landfill/build"

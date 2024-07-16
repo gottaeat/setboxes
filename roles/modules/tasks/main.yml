@@ -1,0 +1,12 @@
+---
+- name: blacklist ipv6
+  community.general.kernel_blacklist:
+    name: ipv6
+    state: present
+
+- name: handle ppp
+  hosts: routers
+  modprobe:
+    name: ppp_generic
+    persistent: "{{ 'present' if ppp_wan else 'absent' }}"
+    state: "{{ 'present' if ppp_wan else 'absent' }}"

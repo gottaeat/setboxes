@@ -1,0 +1,9 @@
+---
+- name: copy over the rules
+  copy:
+    src: rules.d/
+    dest: /etc/udev/rules.d
+    owner: root
+    group: root
+    mode: '0644'
+  notify: reload udev rules

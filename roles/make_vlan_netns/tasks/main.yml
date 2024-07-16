@@ -2,7 +2,7 @@
 # - - netns creation - - #
 - name: copy over the lan_{{ netns_name }}_ns.service unit file
   copy:
-    src: "./dir/etc/systemd/system/lan_{{ netns_name }}_ns.service"
+    src: "lan_{{ netns_name }}_ns.service"
     dest: /etc/systemd/system/
     owner: root
     group: root
@@ -32,7 +32,7 @@
 # - - dnsmasq - - #
 - name: copy over the dnsmasq configuration for {{ netns_name }}
   copy:
-    src: "./dir/mss/etc/dnsmasq_{{ netns_name }}.conf"
+    src: "dnsmasq_{{ netns_name }}.conf"
     dest: /mss/etc/
     owner: root
     group: root
