@@ -10,7 +10,7 @@
 
 - name: template and copy over isp peer config
   template:
-    src: peers/isp.j2
+    src: isp.j2
     dest: /etc/ppp/peers/isp
     owner: root
     group: root
@@ -19,7 +19,7 @@
 
 - name: copy over options
   copy:
-    src: ppp/options
+    src: options
     dest: /etc/ppp
     owner: root
     group: root
