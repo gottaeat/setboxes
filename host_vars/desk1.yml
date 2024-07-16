@@ -41,7 +41,7 @@ main_pkgs_extra:
   - steam
   - virt-manager
   - vulkan-icd-loader
-  - vulkan-radeon 
+  - vulkan-radeon
   - wine
   - wine-mono
   - winetricks

@@ -22,7 +22,7 @@ set_network(){
 }
 
 set_pool(){
-    # create pool 
+    # create pool
     if ! virsh pool-list --name | grep "${ORG_NAME}" >/dev/null 2>&1; then
         virsh pool-define --file ./xml/pool_"${ORG_NAME}".xml
     fi
