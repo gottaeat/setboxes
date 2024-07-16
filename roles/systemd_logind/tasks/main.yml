@@ -7,3 +7,6 @@
     group: root
     mode: '0644'
   notify: restart logind
+
+- name: trigger handlers
+  meta: flush_handlers

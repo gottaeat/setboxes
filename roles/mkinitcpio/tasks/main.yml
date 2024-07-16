@@ -10,3 +10,6 @@
     - vconsole.conf
     - mkinitcpio.conf
   notify: initramfs rebuild
+
+- name: trigger handlers
+  meta: flush_handlers

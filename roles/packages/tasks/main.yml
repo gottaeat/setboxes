@@ -122,3 +122,6 @@
         groups: wireshark
         append: true
       when: '"wireshark-qt" in pkgs'
+
+- name: trigger handlers
+  meta: flush_handlers

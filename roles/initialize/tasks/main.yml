@@ -86,3 +86,6 @@
     state: directory
     owner: root
     group: root
+
+- name: trigger handlers
+  meta: flush_handlers
