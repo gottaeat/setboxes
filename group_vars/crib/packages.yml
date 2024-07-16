@@ -1,4 +1,5 @@
 ---
+# mainline arch repos
 main_pkgs_base:
   - ansible
   - arch-install-scripts
@@ -148,3 +149,13 @@ main_pkgs_wlan_tools:
   - pixiewps
   - pocl
   - reaver
+
+# arch user repositories
+user_pkgs_base:
+  - fbcat
+  - ookla-speedtest-bin
+user_pkgs_multimedia:
+  - chromium-widevine
+  - dragon-drop
+  - ttf-ms-fonts
+  - ungoogled-chromium-bin
