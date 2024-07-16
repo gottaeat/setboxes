@@ -133,27 +133,22 @@ class PkgDiff:
             raise ValueError(f"{self.local_hostname} is not in the inventory.")
 
         # - - packages - - #
+        with open(
+            f"{self._REPODIR}/group_vars/crib/packages.yml", "r", encoding="utf-8"
+        ) as yaml_file:
+            pkgs = yaml.load(yaml_file.read(), Loader=yaml.Loader)
+
         # main
-        with open(
-            f"{self._REPODIR}/files/pkglist/main.yml", "r", encoding="utf-8"
-        ) as yaml_file:
-            main_pkgs = yaml.load(yaml_file.read(), Loader=yaml.Loader)
+        self.main_pkgs_base = pkgs["main_pkgs_base"]
+        self.main_pkgs_multimedia = pkgs["main_pkgs_multimedia"]
+        self.main_pkgs_desktop_extra = pkgs["main_pkgs_desktop_extra"]
+        self.main_pkgs_router = pkgs["main_pkgs_router"]
+        self.main_pkgs_bios = pkgs["main_pkgs_bios"]
+        self.main_pkgs_wlan_tools = pkgs["main_pkgs_wlan_tools"]
 
-        self.main_pkgs_base = main_pkgs["main_pkgs_base"]
-        self.main_pkgs_multimedia = main_pkgs["main_pkgs_multimedia"]
-        self.main_pkgs_desktop_extra = main_pkgs["main_pkgs_desktop_extra"]
-        self.main_pkgs_router = main_pkgs["main_pkgs_router"]
-        self.main_pkgs_bios = main_pkgs["main_pkgs_bios"]
-        self.main_pkgs_wlan_tools = main_pkgs["main_pkgs_wlan_tools"]
-
-        # aur
-        with open(
-            f"{self._REPODIR}/files/pkglist/user.yml", "r", encoding="utf-8"
-        ) as yaml_file:
-            user_pkgs = yaml.load(yaml_file.read(), Loader=yaml.Loader)
-
-        self.user_pkgs_base = user_pkgs["user_pkgs_base"]
-        self.user_pkgs_multimedia = user_pkgs["user_pkgs_multimedia"]
+        # user
+        self.user_pkgs_base = pkgs["user_pkgs_base"]
+        self.user_pkgs_multimedia = pkgs["user_pkgs_multimedia"]
 
         # user requested
         with open(
