@@ -1,5 +1,5 @@
 ---
-- name: configure thinkfans
+- name: configure thinkfan
   block:
     - name: generate thinkfan config
       script:
@@ -19,4 +19,4 @@
             name: thinkfan
             state: "{{ 'restarted' if thinkfan_conf_copy.changed else 'started' }}"
             enabled: true
-  when: not in_vm"
+  when: not in_vm
