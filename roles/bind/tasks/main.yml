@@ -38,17 +38,7 @@
     rsync_opts:
       - "--chown=named:named"
       - "--chmod=D750,F640"
-      - "--exclude=extra.conf"
   register: zone_named_copy
-
-- name: extra config
-  copy:
-    src: "{{ vaultdir }}/setboxes/dir/var/named/extra.conf"
-    dest: /var/named
-    owner: named
-    group: named
-    mode: '0640'
-  register: extra_conf_copy
 
 - name: generate /etc/rndc.key
   command:
@@ -77,8 +67,7 @@
             'restarted' if \
               named_systemd_override.changed or \
               base_named_copy.changed or \
-              zone_named_copy.changed or \
-              extra_conf_copy.changed \
+              zone_named_copy.changed \
             else \
               'started' \
           }}"
