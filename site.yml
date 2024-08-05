@@ -2,7 +2,7 @@
 - hosts: crib
   become: true
   vars_files:
-    - "{{ vaultdir }}/setboxes/pass.yml"
+    - "{{ vaultdir }}/setboxes/cred.yml"
     - "{{ vaultdir }}/setboxes/router.yml"
   roles:
     # core
@@ -18,9 +18,7 @@
     - role: x11
       when: "'desktops' in group_names"
     # mss-wares
-    - role: mss_otg_utils
-    - role: mss_otg_landfill
-      when: "'desktops' in group_names"
+    - role: mss_otg
     - role: mss_nfqws
     # networking
     - role: systemd_networkd

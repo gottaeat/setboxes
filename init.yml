@@ -5,7 +5,7 @@
     - ansible_password: loggedin
     - ansible_port: 22
   vars_files:
-    - "{{ vaultdir }}/setboxes/pass.yml"
+    - "{{ vaultdir }}/setboxes/cred.yml"
   roles:
     - role: convert_boot
       when: "'bios' in group_names"
