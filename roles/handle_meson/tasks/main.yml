@@ -63,7 +63,7 @@
       shell:
         chdir: "{{ project_path }}/{{ build_dir }}"
         cmd: |
-          meson setup ../ && ninja && ninja install
+          meson setup {{ meson_args | default('') }} ../ && ninja && ninja install
 
     - name: remove build artifacts
       file:
