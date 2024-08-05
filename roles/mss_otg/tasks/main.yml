@@ -1,49 +1,13 @@
 ---
-- name: build mss-otg<-utils
+- name: build mss-otg
   include_role:
     name: handle_meson
   vars:
     project_url: "https://github.com/gottaeat/mss-otg"
-    project_name: "otg-utils"
+    project_name: "mss-otg"
     baremetal_path: "/mnt/mss/stuff/techy-bits/git/mss-otg"
-    build_dir: "utils/build"
-
-- name: set otg ownership
-  file:
-    path: "/mss/{{ item }}"
-    owner: root
-    group: root
-    recurse: true
-  with_items:
-    - "bin"
-    - "etc"
-    - "share"
-
-- name: install symlinks for the bash-handler
-  file:
-    src: "/mss/share/bash-handler"
-    dest: "{{ item }}"
-    state: link
-    force: true
-  with_items:
-    - "/etc/profile"
-    - "/etc/bash.bashrc"
-
-- name: install symlinks for aliases
-  block:
-    - name: /mss/repo
-      file:
-        src: "/mnt/mss/stuff/techy-bits/git/setboxes"
-        dest: "/mss/repo"
-        state: link
-        force: true
-
-    - name: /mss/work
-      file:
-        src: "/mnt/mss/stuff/techy-bits/work"
-        dest: "/mss/work"
-        state: link
-        force: true
+    build_dir: "build"
+    meson_args: "-Dsetboxes=true {{ '-Dlandfill=true' if 'desktops' in group_names else '' }}"
 
 - name: setcake.py service for routers
   block:
