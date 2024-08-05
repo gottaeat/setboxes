@@ -3,7 +3,7 @@
   user:
     name: root
     update_password: always
-    password: "{{ root_passwd }}"
+    password: "{{ cred.root.passwd }}"
 
 - name: configure user mss
   block:
@@ -17,7 +17,7 @@
       user:
         name: mss
         uid: 1001
-        password: "{{ user_passwd }}"
+        password: "{{ cred.mss.passwd }}"
         password_lock: false
         group: mss
         groups: "{{ mss_groups_base }}"
@@ -34,7 +34,7 @@
       ansible.posix.authorized_key:
         user: mss
         state: present
-        key: "{{ lookup('url', 'https://github.com/gottaeat.keys', split_lines=False) }}"
+        key: "{{ cred.mss.ssh_key }}"
 
 - name: configure sudo
   block:
