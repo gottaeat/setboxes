@@ -41,9 +41,11 @@ ExecStart=nft flush ruleset
 ExecStart=nft 'add table ip lan_crib'
 ExecStart=nft 'add chain ip lan_crib mangle_forward { type filter hook forward priority mangle; policy accept; };'
 ExecStart=nft 'add chain ip lan_crib postrouting { type nat hook postrouting priority srcnat; policy accept; };'
+ExecStart=nft 'add chain ip lan_crib prerouting { type nat hook prerouting priority dstnat; policy accept; };'
 ExecStart=nft 'add rule ip lan_crib mangle_forward iifname "lichen" tcp flags syn tcp option maxseg size set rt mtu counter'
 ExecStart=nft 'add rule ip lan_crib mangle_forward oifname "lichen" tcp flags syn tcp option maxseg size set rt mtu counter'
 ExecStart=nft 'add rule ip lan_crib postrouting oifname "lan_crib_veth1" counter masquerade'
+ExecStart=nft 'add rule ip lan_crib prerouting iifname "lichen" ip daddr 10.13.38.2 tcp dport 9100 counter dnat to 10.69.0.0:9100'
 
 # add a route to the lan subnet so the router can hit it without netns exec
 ExecStart=nsenter -t 1 -n -- ip route add 10.13.37.0/24 via 10.69.0.1 dev lan_crib_veth0
