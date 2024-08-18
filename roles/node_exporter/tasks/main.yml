@@ -1,0 +1,78 @@
+---
+- name: copy over configuration
+  block:
+    - name: create config directory
+      file:
+        path: /etc/node_exporter
+        owner: root
+        group: root
+        state: directory
+
+    - name: copy over config
+      template:
+        src: web.yml.j2
+        dest: /etc/node_exporter/web.yml
+        owner: root
+        group: root
+        mode: '0644'
+      register: node_exporter_config_copy
+
+    - name: copy over systemd env file
+      copy:
+        src: prometheus-node-exporter
+        dest: /etc/conf.d/
+        owner: root
+        group: root
+        mode: '0644'
+      register: node_exporter_env_copy
+
+- name: make prometheus-node-exporter depend on lan_crib_ns
+  block:
+    - name: copy over prometheus-node-exporter overrides
+      copy:
+        src: prometheus-node-exporter.service.d
+        dest: /etc/systemd/system
+        owner: root
+        group: root
+        mode: '0644'
+      register: node_exporter_systemd_override
+
+    - name: daemon reload
+      systemd_service:
+        daemon_reload: true
+      when: node_exporter_systemd_override.changed
+
+- name: gather service facts for the handler
+  service_facts:
+
+- name: sighup to prometheus-node-exporter if the config changed
+  shell:
+    cmd: pkill -HUP prometheus-node-exporter
+  when: >-
+    (
+      ansible_facts.services['prometheus-node-exporter'] is defined and
+      ansible_facts.services['prometheus-node-exporter'].state == 'running' and
+      node_exporter_config_copy.changed
+    ) and not in_vm
+
+- name: set service prometheus-node-exporter state
+  block:
+    - name: enabled by default, if not in a vm
+      systemd_service:
+        name: prometheus-node-exporter
+        enabled: true
+      when: in_vm
+
+    - name: triggers, when on baremetal
+      systemd_service:
+        name: prometheus-node-exporter
+        state:
+          "{{ \
+            'restarted' if \
+              node_exporter_env_copy.changed or \
+              node_exporter_systemd_override.changed \
+            else \
+              'started' \
+          }}"
+        enabled: true
+      when: not in_vm
