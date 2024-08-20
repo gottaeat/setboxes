@@ -42,19 +42,6 @@
         daemon_reload: true
       when: node_exporter_systemd_override.changed
 
-- name: gather service facts for the handler
-  service_facts:
-
-- name: sighup to prometheus-node-exporter if the config changed
-  shell:
-    cmd: pkill -HUP prometheus-node-exporter
-  when: >-
-    (
-      ansible_facts.services['prometheus-node-exporter'] is defined and
-      ansible_facts.services['prometheus-node-exporter'].state == 'running' and
-      node_exporter_config_copy.changed
-    ) and not in_vm
-
 - name: set service prometheus-node-exporter state
   block:
     - name: enabled by default, if not in a vm
@@ -70,7 +57,8 @@
           "{{ \
             'restarted' if \
               node_exporter_env_copy.changed or \
-              node_exporter_systemd_override.changed \
+              node_exporter_systemd_override.changed or \
+              node_exporter_config_copy.changed \
             else \
               'started' \
           }}"
