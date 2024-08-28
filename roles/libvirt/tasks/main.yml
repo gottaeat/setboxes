@@ -77,7 +77,6 @@
         xml: '{{ lookup("file", item.xml) }}'
       with_items:
         - { name: "gat", xml: "virtxml/net_gat.xml" }
-        - { name: "cumvirt", xml: "virtxml/net_cumvirt.xml" }
 
     - name: define pools
       community.libvirt.virt_pool:
@@ -85,7 +84,6 @@
         name: "{{ item.name }}"
         xml: '{{ lookup("file", item.xml) }}'
       with_items:
-        - { name: "cumvirt", xml: "virtxml/pool_cumvirt.xml" }
         - { name: "gat", xml: "virtxml/pool_gat.xml" }
         - { name: "iso", xml: "virtxml/pool_iso.xml" }
 
@@ -96,7 +94,6 @@
             state: active
             name: "{{ item }}"
           with_items:
-            - cumvirt
             - gat
 
         - name: autostart networks
@@ -104,7 +101,6 @@
             autostart: true
             name: "{{ item }}"
           with_items:
-            - cumvirt
             - gat
 
         - name: activate pools
@@ -112,7 +108,6 @@
             state: active
             name: "{{ item }}"
           with_items:
-            - cumvirt
             - gat
             - iso
 
@@ -121,7 +116,6 @@
             autostart: true
             name: "{{ item }}"
           with_items:
-            - cumvirt
             - gat
             - iso
 
