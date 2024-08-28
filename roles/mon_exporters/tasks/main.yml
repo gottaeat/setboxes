@@ -1,0 +1,59 @@
+---
+- name: copy over systemd env files
+  block:
+    - name: prometheus-node-exporter env copy
+      copy:
+        src: prometheus-node-exporter
+        dest: /etc/conf.d
+        owner: root
+        group: root
+        mode: '0644'
+      register: node_exporter_env_copy
+
+- name: make exporters depend on lan_crib_ns
+  block:
+    - name: prometheus-node-exporter override copy
+      block:
+        - name: create systemd override dir
+          file:
+            path: /etc/systemd/system/prometheus-node-exporter.service.d
+            owner: root
+            group: root
+            mode: '0644'
+            state: directory
+
+        - name: copy over override.conf for node_exporter
+          copy:
+            src: override.conf
+            dest: /etc/systemd/system/prometheus-node-exporter.service.d/
+            owner: root
+            group: root
+            mode: '0644'
+          register: node_exporter_systemd_override
+
+- name: daemon reload
+  systemd_service:
+    daemon_reload: true
+  when: node_exporter_systemd_override.changed
+
+- name: set service prometheus-node-exporter state
+  block:
+    - name: enabled by default, if not in a vm
+      systemd_service:
+        name: prometheus-node-exporter
+        enabled: true
+      when: in_vm
+
+    - name: triggers, when on baremetal
+      systemd_service:
+        name: prometheus-node-exporter
+        state:
+          "{{ \
+            'restarted' if \
+              node_exporter_env_copy.changed or \
+              node_exporter_systemd_override.changed \
+            else \
+              'started' \
+          }}"
+        enabled: true
+      when: not in_vm
