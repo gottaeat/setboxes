@@ -3,7 +3,7 @@
   user:
     name: root
     update_password: always
-    password: "{{ setboxes_cred.users.root.passwd }}"
+    password: "{{ cred.users.root.passwd }}"
 
 - name: configure user mss
   block:
@@ -17,7 +17,7 @@
       user:
         name: mss
         uid: 1001
-        password: "{{ setboxes_cred.users.mss.passwd }}"
+        password: "{{ cred.users.mss.passwd }}"
         password_lock: false
         group: mss
         groups: "{{ mss_groups_base }}"
@@ -34,7 +34,7 @@
       ansible.posix.authorized_key:
         user: mss
         state: present
-        key: "{{ setboxes_cred.users.mss.ssh_key }}"
+        key: "{{ cred.users.mss.ssh_key }}"
 
 - name: configure sudo
   block:
