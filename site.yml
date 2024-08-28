@@ -30,7 +30,7 @@
     - role: pppd
       when: "'routers' in group_names and ppp_wan"
     # services
-    - role: node_exporter
+    - role: mon_exporters
       when: "'routers' in group_names"
     - role: systemd_logind
     - role: nftables
