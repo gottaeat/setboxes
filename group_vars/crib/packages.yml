@@ -135,6 +135,7 @@ main_pkgs_desktop_extra:
 main_pkgs_router:
   - ppp
   - prometheus-node-exporter
+  - promtail
 
 main_pkgs_bios:
   - grub
