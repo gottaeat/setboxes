@@ -64,7 +64,24 @@ options {
 {% endif %}
     minimal-responses yes;
     dnssec-validation no;
+{% if 'routers' in group_names %}
+    querylog yes;
+{% endif %}
 };
+
+{% if 'routers' in group_names %}
+// logging
+logging {
+    channel query_log {
+        syslog daemon;
+        severity info;
+        print-category no;
+        print-severity no;
+        print-time no;
+    };
+    category queries { query_log; };
+};
+{% endif %}
 
 // recursive
 view "recurse" {
