@@ -52,3 +52,4 @@ main_pkgs_extra:
 
 user_pkgs_extra:
   - xone-dkms-git
+  - xone-dongle-firmware
