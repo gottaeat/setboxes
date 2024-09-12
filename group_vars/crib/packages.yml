@@ -78,6 +78,7 @@ main_pkgs_base:
 main_pkgs_multimedia:
   - alsa-utils
   - audacity
+  - code
   - feh
   - ffmpeg
   - fontconfig
