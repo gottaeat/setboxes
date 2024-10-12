@@ -51,5 +51,4 @@ main_pkgs_extra:
   - xf86-video-amdgpu
 
 user_pkgs_extra:
-  - xone-dkms-git
-  - xone-dongle-firmware
+  - base
