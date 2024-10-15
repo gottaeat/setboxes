@@ -34,7 +34,6 @@ main_pkgs_extra:
   - linux-zen-headers
   - mangohud
   - mesa-vdpau
-  - obs-studio
   - openal
   - qemu-desktop
   - qt5-base
