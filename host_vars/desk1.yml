@@ -19,7 +19,6 @@ main_pkgs_extra:
   - docker-buildx
   - docker-compose
   - efibootmgr
-  - firefox
   - glfw
   - jdk-openjdk
   - lib32-libpulse
