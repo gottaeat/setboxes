@@ -13,6 +13,7 @@ main_pkgs_base:
   - dosfstools
   - ethtool
   - fdupes
+  - firefox
   - git
   - gnu-netcat
   - go
@@ -160,7 +161,5 @@ user_pkgs_base:
   - ookla-speedtest-bin
 
 user_pkgs_multimedia:
-  - chromium-widevine
   - dragon-drop
   - ttf-ms-fonts
-  - ungoogled-chromium-bin
