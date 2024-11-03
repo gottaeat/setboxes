@@ -13,7 +13,6 @@ main_pkgs_base:
   - dosfstools
   - ethtool
   - fdupes
-  - firefox
   - git
   - gnu-netcat
   - go
@@ -82,6 +81,7 @@ main_pkgs_multimedia:
   - code
   - feh
   - ffmpeg
+  - firefox
   - fontconfig
   - freetype2
   - gimp
@@ -107,6 +107,7 @@ main_pkgs_multimedia:
   - qbittorrent-nox
   - redshift
   - signal-desktop
+  - thunderbird
   - ttf-croscore
   - ttf-sazanami
   - v4l-utils
