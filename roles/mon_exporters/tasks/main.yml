@@ -19,25 +19,6 @@
         mode: '0644'
       register: node_exporter_systemd_override
 
-- name: make promtail run inside lan_crib_ns
-  block:
-    - name: create systemd override dir
-      file:
-        path: /etc/systemd/system/promtail.service.d
-        owner: root
-        group: root
-        mode: '0644'
-        state: directory
-
-    - name: copy over override.conf
-      copy:
-        src: netns.conf
-        dest: /etc/systemd/system/promtail.service.d/
-        owner: root
-        group: root
-        mode: '0644'
-      register: promtail_systemd_override
-
 # - - configs - - #
 - name: prometheus-node-exporter env copy
   copy:
@@ -48,25 +29,11 @@
     mode: '0644'
   register: node_exporter_env_copy
 
-- name: promtail config copy
-  template:
-    src: promtail.yaml.j2
-    dest: /etc/loki/promtail.yaml
-    owner: root
-    group: root
-    mode: '0644'
-  register: promtail_config_copy
-
-
 # - - systemd - - #
 - name: daemon reload
   systemd_service:
     daemon_reload: true
-  when: >-
-    (
-      node_exporter_systemd_override.changed or
-      promtail_systemd_override.changed
-    )
+  when: node_exporter_systemd_override.changed
 
 - name: set service prometheus-node-exporter state
   block:
@@ -84,28 +51,6 @@
             'restarted' if \
               node_exporter_env_copy.changed or \
               node_exporter_systemd_override.changed \
-            else \
-              'started' \
-          }}"
-        enabled: true
-      when: not in_vm
-
-- name: set service promtail state
-  block:
-    - name: enabled by default, if not in a vm
-      systemd_service:
-        name: promtail
-        enabled: true
-      when: in_vm
-
-    - name: triggers, when on baremetal
-      systemd_service:
-        name: promtail
-        state:
-          "{{ \
-            'restarted' if \
-              promtail_config_copy.changed or \
-              promtail_systemd_override.changed \
             else \
               'started' \
           }}"
