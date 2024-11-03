@@ -13,7 +13,7 @@ FingerprintHash            sha256
 HostKey                    /etc/ssh/ssh_host_rsa_key
 ListenAddress              0.0.0.0
 LoginGraceTime             60
-LogLevel                   ERROR
+LogLevel                   INFO
 MaxAuthTries               3
 MaxSessions                4
 MaxStartups                4
