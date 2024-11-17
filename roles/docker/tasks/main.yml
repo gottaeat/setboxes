@@ -8,14 +8,29 @@
     mode: '0644'
   register: dockerns_copy
 
-- name: copy over docker overrides
-  copy:
-    src: docker.service.d
-    dest: /etc/systemd/system
-    owner: root
-    group: root
-    mode: '0644'
-  register: docker_systemd_override
+- name: set systemd overrides
+  block:
+    - name: ensure directories exist
+      file:
+        path: "/etc/systemd/system/{{ item }}"
+        state: directory
+        owner: root
+        group: root
+      with_items:
+        - containerd.service.d/
+        - docker.service.d/
+
+    - name: copy over docker overrides
+      copy:
+        src: netns.conf
+        dest: "/etc/systemd/system/{{ item }}/"
+        owner: root
+        group: root
+        mode: '0644'
+      with_items:
+        - containerd.service.d
+        - docker.service.d
+      register: docker_systemd_override
 
 - name: modify docker and containerd LimitNOFILE
   replace:
