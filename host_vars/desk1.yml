@@ -8,9 +8,7 @@ mss_wireguard_ifaces:
   - lichen
 
 main_pkgs_extra:
-  - aarch64-linux-gnu-gcc
   - amd-ucode
-  - arm-none-eabi-gcc
   - cdrtools
   - cmake
   - dmidecode
@@ -37,8 +35,7 @@ main_pkgs_extra:
   - openal
   - qemu-desktop
   - qt5-base
-  - radeontop
-  - rocm-opencl-runtime
+  - nvtop
   - sshpass
   - steam
   - virt-manager
