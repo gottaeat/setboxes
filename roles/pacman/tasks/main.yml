@@ -34,9 +34,26 @@
         state: directory
         recurse: true
 
-    - name: download one-off sourceme-build
-      get_url:
-        url: 'https://raw.githubusercontent.com/gottaeat/mss-otg/master/utils/etc/sourceme-build'
+    - name: copy contents
+      copy:
+        content: |
+            CPPFLAGS="-DNDEBUG -D_FORTIFY_SOURCE=2"
+            CFLAGS="${CPPFLAGS} -g0 -s -w -pipe -O3 -march=x86-64 -mtune=generic"
+            CFLAGS="${CFLAGS} -fcommon -fstack-protector-strong"
+            CXXFLAGS="${CFLAGS}"
+            LDFLAGS="${CFLAGS} -Wl,--as-needed,--sort-common,-z,relro,-z,now,--gc-sections,-O3"
+            export CPPFLAGS CFLAGS CXXFLAGS LDFLAGS
+
+            _NR_PROC="$(nproc)"
+
+            MAKEFLAGS="-j${_NR_PROC} V=1"
+            SAMUFLAGS="-j${_NR_PROC} -v"
+            export MAKEFLAGS SAMUFLAGS
+
+            CARCH="x86_64"
+            CHOST="${CARCH}-pc-linux-gnu"
+            CBUILD="${CHOST}"
+            export CARCH CHOST CBUILD
         dest: /mss/etc/sourceme-build
         owner: root
         group: root
