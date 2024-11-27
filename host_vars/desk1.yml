@@ -32,10 +32,11 @@ main_pkgs_extra:
   - linux-zen-headers
   - mangohud
   - mesa-vdpau
+  - nvtop
   - openal
   - qemu-desktop
   - qt5-base
-  - nvtop
+  - solaar
   - sshpass
   - steam
   - virt-manager
