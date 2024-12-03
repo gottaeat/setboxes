@@ -7,7 +7,12 @@
     project_name: "mss-otg"
     baremetal_path: "/mnt/mss/stuff/techy-bits/git/mss-otg"
     build_dir: "build"
-    meson_args: "-Dmssdir=/mss -Dsetboxes=true {{ '-Dlandfill=true' if 'desktops' in group_names else '' }}"
+    meson_args: >-
+      {{
+        "-Dmssdir=/mss -Dsetboxes=true" +
+        (" -Dfontsize=12" if inventory_hostname == "desk1" else "") +
+        (" -Dlandfill=true" if "desktops" in group_names else "" )
+      }}
 
 - name: setcake.py service for routers
   block:
