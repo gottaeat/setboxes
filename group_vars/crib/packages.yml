@@ -93,6 +93,7 @@ main_pkgs_multimedia:
   - libxinerama
   - libxrender
   - maim
+  - mesa
   - mesa-utils
   - mpd
   - mpv
