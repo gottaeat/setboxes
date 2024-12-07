@@ -1,14 +1,20 @@
 ---
-- name: copy over mkinitcpio related configuration
+- name: copy over mkinitcpio.conf
   copy:
-    src: "{{ item }}"
+    src: mkinitcpio.conf
     dest: /etc
     owner: root
     group: root
     mode: '0644'
-  with_items:
-    - vconsole.conf
-    - mkinitcpio.conf
+  notify: initramfs rebuild
+
+- name: copy over vconsole.conf
+  template:
+    src: vconsole.conf.j2
+    dest: /etc/vconsole.conf
+    owner: root
+    group: root
+    mode: '0644'
   notify: initramfs rebuild
 
 - name: trigger handlers
