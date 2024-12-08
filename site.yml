@@ -39,8 +39,6 @@
       when: '"docker" in pkgs'
     - role: libvirt
       when: "'libvirt' in pkgs"
-    - role: pulseaudio
-      when: "'desktops' in group_names"
     - role: mpd
       when: "'desktops' in group_names"
     - role: ntpd
