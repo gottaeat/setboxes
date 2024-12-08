@@ -113,6 +113,7 @@ main_pkgs_multimedia:
   - xorg-xsetroot
   - xtrlock
   # gui global
+  - alacritty
   - audacity
   - code
   - firefox
