@@ -82,8 +82,11 @@ main_pkgs_multimedia:
   # audio pulseaudio
   - mpd
   - ncmpcpp
-  - pulseaudio
-  - pulseaudio-alsa
+  - pipewire
+  - pipewire-alsa
+  - pipewire-audio
+  - pipewire-pulse
+  - wireplumber
   # x11 specific
   - feh
   - libx11
