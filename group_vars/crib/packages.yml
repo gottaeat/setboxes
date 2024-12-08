@@ -76,43 +76,24 @@ main_pkgs_base:
   - wireguard-tools
 
 main_pkgs_multimedia:
+  # audio global
   - alsa-utils
-  - audacity
-  - code
+  - pavucontrol
+  # audio pulseaudio
+  - mpd
+  - ncmpcpp
+  - pulseaudio
+  - pulseaudio-alsa
+  # x11 specific
   - feh
-  - ffmpeg
-  - firefox
-  - fontconfig
-  - freetype2
-  - gimp
-  - imagemagick
-  - libinput
-  - libreoffice-fresh
   - libx11
   - libxft
   - libxinerama
   - libxrender
   - maim
-  - mesa
-  - mesa-utils
-  - mpd
-  - mpv
   - mupdf
-  - ncmpcpp
-  - noto-fonts-emoji
-  - pavucontrol
-  - perl-image-exiftool
   - picom
-  - pulseaudio
-  - pulseaudio-alsa
-  - qbittorrent-nox
   - redshift
-  - signal-desktop
-  - thunderbird
-  - ttf-croscore
-  - ttf-sazanami
-  - v4l-utils
-  - wireshark-qt
   - xclip
   - xf86-input-libinput
   - xorg-server
@@ -128,7 +109,33 @@ main_pkgs_multimedia:
   - xorg-xset
   - xorg-xsetroot
   - xtrlock
+  # gui global
+  - audacity
+  - code
+  - firefox
+  - gimp
+  - libreoffice-fresh
+  - mpv
+  - signal-desktop
+  - thunderbird
+  - wireshark-qt
+  # libs
+  - ffmpeg
+  - fontconfig
+  - freetype2
+  - libinput
+  - mesa
+  - v4l-utils
+  # utils
+  - imagemagick
+  - mesa-utils
+  - perl-image-exiftool
+  - qbittorrent-nox
   - yt-dlp
+  # fonts
+  - noto-fonts-emoji
+  - ttf-croscore
+  - ttf-sazanami
 
 main_pkgs_desktop_extra:
   - android-tools
