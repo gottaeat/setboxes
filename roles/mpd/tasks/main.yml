@@ -8,17 +8,16 @@
     mode: '0644'
   register: mpd_copy
 
-- name: mask mpd.socket
-  systemd_service:
-    name: mpd.socket
-    enabled: false
-    masked: true
-
 - name: set mpd state
   systemd_service:
-    name: mpd
+    name: mpd.service
     state: "{{ 'restarted' if mpd_copy.changed else 'started' }}"
     enabled: true
+    scope: user
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/1001"
+  become: true
+  become_user: mss
 
 - name: generate mpd database and runtime options
   block:
@@ -38,6 +37,8 @@
               mpc single off && \
               mpc consume off && \
               mpc crossfade 3
+          become: true
+          become_user: mss
 
         - name: set mpd_init
           file:
