@@ -8,5 +8,12 @@
     mode: '0644'
   notify: restart logind
 
+- name: enable-linger for user mss
+  file:
+    path: /var/lib/systemd/linger/mss
+    state: touch
+    modification_time: preserve
+    access_time: preserve
+
 - name: trigger handlers
   meta: flush_handlers
