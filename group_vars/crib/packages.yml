@@ -112,6 +112,21 @@ main_pkgs_multimedia:
   - xorg-xset
   - xorg-xsetroot
   - xtrlock
+  # wayland specific
+  - grim
+  - i3status
+  - imv
+  - mako
+  - qt5-wayland
+  - qt6-wayland
+  - slurp
+  - sway
+  - swaylock
+  - wev
+  - wl-clipboard
+  - wmenu
+  - xdg-desktop-portal-gtk
+  - xorg-xwayland
   # gui global
   - alacritty
   - audacity
