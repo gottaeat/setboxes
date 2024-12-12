@@ -79,7 +79,7 @@ main_pkgs_multimedia:
   # audio global
   - alsa-utils
   - pavucontrol
-  # audio pulseaudio
+  # audio pipewire
   - mpd
   - ncmpcpp
   - pipewire
@@ -87,31 +87,6 @@ main_pkgs_multimedia:
   - pipewire-audio
   - pipewire-pulse
   - wireplumber
-  # x11 specific
-  - feh
-  - libx11
-  - libxft
-  - libxinerama
-  - libxrender
-  - maim
-  - mupdf
-  - picom
-  - redshift
-  - xclip
-  - xf86-input-libinput
-  - xorg-server
-  - xorg-setxkbmap
-  - xorg-xev
-  - xorg-xhost
-  - xorg-xinit
-  - xorg-xinput
-  - xorg-xkill
-  - xorg-xprop
-  - xorg-xrandr
-  - xorg-xrdb
-  - xorg-xset
-  - xorg-xsetroot
-  - xtrlock
   # wayland specific
   - grim
   - i3status
