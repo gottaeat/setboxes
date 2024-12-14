@@ -67,7 +67,7 @@ class PkgDiffFormatter(logging.Formatter):
 
 
 class PkgDiff:
-    _REPODIR = "/mss/repo"
+    _REPODIR = "/opt/mss/repo"
 
     def __init__(self):
         self.logger = None
