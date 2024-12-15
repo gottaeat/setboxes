@@ -23,7 +23,7 @@
 
 - name: check if mss-otg sourceme-build exists
   stat:
-    path: /mss/etc/sourceme-build
+    path: /opt/mss/etc/sourceme-build
   register: sourceme_build_state
 
 - name: one-off mss-otg sourceme-build
@@ -54,7 +54,7 @@
             CHOST="${CARCH}-pc-linux-gnu"
             CBUILD="${CHOST}"
             export CARCH CHOST CBUILD
-        dest: /mss/etc/sourceme-build
+        dest: /opt/mss/etc/sourceme-build
         owner: root
         group: root
         mode: '0644'
