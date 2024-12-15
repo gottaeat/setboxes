@@ -1,5 +1,4 @@
 ---
----
 # 1. check if vm init was done
 - name: check if vm init was done
   stat:
