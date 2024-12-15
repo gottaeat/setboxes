@@ -102,6 +102,7 @@ main_pkgs_multimedia:
   - wl-clipboard
   - wmenu
   - xdg-desktop-portal-gtk
+  - xdg-desktop-portal-wlr
   - xorg-xwayland
   # gui global
   - alacritty
