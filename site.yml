@@ -15,8 +15,6 @@
     - role: modules
     # software
     - role: vim
-    - role: x11
-      when: "'desktops' in group_names"
     # mss-wares
     - role: mss_otg
     - role: mss_nfqws
@@ -46,8 +44,6 @@
     - role: ntpd
     - role: tor
       when: "'desktops' in group_names"
-    - role: acpid
-      when: "'acpid' in pkgs"
     - role: thinkfan
       when: "'thinkfan' in pkgs"
     - role: bulk_svc
