@@ -1,7 +1,6 @@
 - name: mask pulseaudio service and socket
   systemd_service:
     name: "{{ item }}"
-    enabled: false
     masked: true
   with_items:
     - pulseaudio.service
