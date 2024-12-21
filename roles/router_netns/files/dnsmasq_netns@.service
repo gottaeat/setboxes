@@ -11,8 +11,8 @@ PrivateMounts=No
 
 PIDFile=/var/run/dnsmasq_%i.pid
 
-ExecStartPre=dnsmasq --test -C /mss/etc/dnsmasq_%i.conf
-ExecStart=dnsmasq -k -C /mss/etc/dnsmasq_%i.conf
+ExecStartPre=dnsmasq --test -C /opt/mss/etc/dnsmasq_%i.conf
+ExecStart=dnsmasq -k -C /opt/mss/etc/dnsmasq_%i.conf
 ExecReload=kill -HUP $MAINPID
 ExecStop=kill -15 $MAINPID
 
