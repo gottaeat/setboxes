@@ -30,7 +30,7 @@
   block:
     - name: create paths
       file:
-        path: /mss/etc
+        path: /opt/mss/etc
         state: directory
         recurse: true
 
