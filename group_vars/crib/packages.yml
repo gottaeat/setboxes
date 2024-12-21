@@ -37,7 +37,6 @@ main_pkgs_base:
   - man-db
   - masscan
   - meson
-  - mpc
   - mtr
   - neofetch
   - net-tools
@@ -80,8 +79,6 @@ main_pkgs_multimedia:
   - alsa-utils
   - pavucontrol
   # audio pipewire
-  - mpd
-  - ncmpcpp
   - pipewire
   - pipewire-alsa
   - pipewire-audio
