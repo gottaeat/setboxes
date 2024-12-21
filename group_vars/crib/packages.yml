@@ -90,7 +90,6 @@ main_pkgs_multimedia:
   # wayland specific
   - grim
   - i3blocks
-  - imv
   - mako
   - qt5-wayland
   - qt6-wayland
