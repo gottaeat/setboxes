@@ -33,7 +33,7 @@
 - name: copy over the dnsmasq configuration for {{ netns_name }}
   copy:
     src: "dnsmasq_{{ netns_name }}.conf"
-    dest: /mss/etc/
+    dest: /opt/mss/etc/
     owner: root
     group: root
     mode: '0644'
