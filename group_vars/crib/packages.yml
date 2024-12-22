@@ -125,9 +125,9 @@ main_pkgs_multimedia:
   - qbittorrent-nox
   - yt-dlp
   # fonts
+  - noto-fonts
+  - noto-fonts-cjk
   - noto-fonts-emoji
-  - ttf-croscore
-  - ttf-sazanami
 
 main_pkgs_desktop_extra:
   - android-tools
