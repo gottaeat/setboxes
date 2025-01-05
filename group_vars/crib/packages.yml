@@ -1,6 +1,7 @@
 ---
 # mainline arch repos
 main_pkgs_base:
+  - 7zip
   - ansible
   - arch-install-scripts
   - base
@@ -45,7 +46,6 @@ main_pkgs_base:
   - ntp
   - openssh
   - openvpn
-  - p7zip
   - pacman-contrib
   - partclone
   - patchelf
