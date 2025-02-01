@@ -1,5 +1,8 @@
 asyncmap 0
-crtscts
 lock
-modem
 noipx
+nodeflate
+nobsdcomp
+nopcomp
+novj
+novjccomp
