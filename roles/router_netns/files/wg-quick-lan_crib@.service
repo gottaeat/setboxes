@@ -3,9 +3,14 @@ Description=WireGuard via wg-quick(8) for %I in lan_crib network namespace
 PartOf=wg-quick.target
 
 JoinsNamespaceOf=lan_crib_ns.service
+{% if ppp_wan %}
+BindsTo=lan_crib_ns.service mss-ppp.service
+After=lan_crib_ns.service mss-ppp.service
+{% else %}
 BindsTo=lan_crib_ns.service
-Requires=lan_crib_ns.service
 After=lan_crib_ns.service
+{% endif %}
+Requires=lan_crib_ns.service
 
 [Service]
 PrivateNetwork=Yes
