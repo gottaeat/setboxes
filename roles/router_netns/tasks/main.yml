@@ -9,9 +9,9 @@
   register: dnsmasq_netns_unitfile_copy
 
 - name: install wg-quick-lan_crib unit file
-  copy:
-    src: wg-quick-lan_crib@.service
-    dest: /etc/systemd/system/
+  template:
+    src: wg-quick-lan_crib@.service.j2
+    dest: /etc/systemd/system/wg-quick-lan_crib@.service
     owner: root
     group: root
     mode: '0644'
