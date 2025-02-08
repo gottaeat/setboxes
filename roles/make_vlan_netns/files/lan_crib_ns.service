@@ -51,6 +51,9 @@ ExecStart=nft 'add rule ip lan_crib prerouting iifname "lichen" ip daddr {10.13.
 # add a route to the lan subnet so the router can hit it without netns exec
 ExecStart=nsenter -t 1 -n -- ip route add 10.13.37.0/24 via 10.69.0.1 dev lan_crib_veth0
 
+# upstream
+ExecStart=ip route add 192.168.1.0/24 via 10.69.0.0 dev lan_crib_veth1
+
 # move guest back to pid 1 ns and remove lan_crib ns and the static route
 ExecStop=nsenter -t 1 -n -- ip route del 10.13.37.0/24 via 10.69.0.1 dev lan_crib_veth0
 ExecStop=ip link set crib netns 1
