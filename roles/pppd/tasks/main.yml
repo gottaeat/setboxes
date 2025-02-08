@@ -37,23 +37,34 @@
 
 - name: set pppd state
   block:
-    - name: enabled by default
+    - name: enabled by default if wan is ppp, disabled if not
       systemd_service:
         name: mss-ppp
-        enabled: true
+        enabled: "{{ 'true' if ppp_wan else 'false' }}"
+      when: in_vm
 
-    - name: triggers
-      systemd_service:
-        name: mss-ppp
-        state:
-          "{{ \
-            'restarted' if \
-              secret_copy.changed or \
-              isp_copy.changed or \
-              ppp_opts_copy.changed or \
-              pppsystemd_copy.changed \
-            else \
-              'started' \
-          }}"
-        enabled: true
+    - name: triggers, on baremetal
+      block:
+        - name: wan is ppp
+          systemd_service:
+            name: mss-ppp
+            state:
+              "{{ \
+                'restarted' if \
+                  secret_copy.changed or \
+                  isp_copy.changed or \
+                  ppp_opts_copy.changed or \
+                  pppsystemd_copy.changed \
+                else \
+                  'started' \
+              }}"
+            enabled: true
+          when: ppp_wan
+
+        - name: wan is dhcp
+          systemd_service:
+            name: mss-ppp
+            state: stopped
+            enabled: false
+          when: not ppp_wan
       when: not in_vm
