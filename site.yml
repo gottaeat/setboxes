@@ -26,7 +26,7 @@
     - role: networkmanager
       when: "'desktops' in group_names"
     - role: pppd
-      when: "'routers' in group_names and ppp_wan"
+      when: "'routers' in group_names"
     # services
     - role: mon_exporters
       when: "'routers' in group_names"
