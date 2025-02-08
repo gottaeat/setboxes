@@ -3,10 +3,3 @@
   community.general.kernel_blacklist:
     name: ipv6
     state: present
-
-- name: handle ppp
-  modprobe:
-    name: ppp_generic
-    persistent: "{{ 'present' if ppp_wan else 'absent' }}"
-    state: "{{ 'present' if ppp_wan else 'absent' }}"
-  when: "'routers' in group_names"
