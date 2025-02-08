@@ -1,9 +1,9 @@
 ---
 - hosts: crib
   vars:
-    - ansible_user: root
-    - ansible_password: loggedin
-    - ansible_port: 22
+    ansible_user: root
+    ansible_password: loggedin
+    ansible_port: 22
   vars_files:
     - "{{ vaultdir }}/setboxes/cred.yml"
   roles:
