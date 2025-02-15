@@ -103,7 +103,6 @@ main_pkgs_multimedia:
   # gui global
   - alacritty
   - audacity
-  - code
   - firefox
   - gimp
   - libreoffice-fresh
@@ -163,3 +162,4 @@ user_pkgs_base:
 user_pkgs_multimedia:
   - dragon-drop
   - ttf-ms-fonts
+  - visual-studio-code-bin
