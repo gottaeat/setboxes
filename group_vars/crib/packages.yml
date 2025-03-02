@@ -21,6 +21,7 @@ main_pkgs_base:
   - gptfdisk
   - htop
   - inetutils
+  - iperf3
   - iptables-nft
   - irssi
   - iw
