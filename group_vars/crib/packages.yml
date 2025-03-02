@@ -86,20 +86,22 @@ main_pkgs_multimedia:
   - wireplumber
   # wayland specific
   - grim
-  - i3blocks
   - mako
   - qt5-wayland
   - qt6-wayland
   - slurp
-  - sway
-  - swaybg
-  - swaylock
   - wev
   - wl-clipboard
   - wmenu
   - xdg-desktop-portal-gtk
-  - xdg-desktop-portal-wlr
   - xorg-xwayland
+  # wayland sway
+  - hyprland
+  - hyprpaper
+  - hyprpolkitagent
+  - swaylock
+  - waybar
+  - xdg-desktop-portal-hyprland
   # gui global
   - alacritty
   - audacity
