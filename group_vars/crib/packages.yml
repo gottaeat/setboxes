@@ -129,6 +129,7 @@ main_pkgs_multimedia:
   - noto-fonts
   - noto-fonts-cjk
   - noto-fonts-emoji
+  - ttf-terminus-nerd
 
 main_pkgs_desktop_extra:
   - android-tools
