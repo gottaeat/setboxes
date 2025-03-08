@@ -35,6 +35,7 @@ main_pkgs_extra:
   - mangohud
   - nvtop
   - openal
+  - protontricks
   - qemu-desktop
   - qt5-base
   - solaar
