@@ -21,6 +21,7 @@ main_pkgs_base:
   - gptfdisk
   - htop
   - inetutils
+  - iperf3
   - iptables-nft
   - irssi
   - iw
@@ -103,12 +104,12 @@ main_pkgs_multimedia:
   # gui global
   - alacritty
   - audacity
-  - firefox
   - gimp
   - libreoffice-fresh
   - mpv
   - signal-desktop
   - thunderbird
+  - torbrowser-launcher
   - wireshark-qt
   # libs
   - ffmpeg
@@ -160,6 +161,7 @@ user_pkgs_base:
   - ookla-speedtest-bin
 
 user_pkgs_multimedia:
+  - brave-bin
   - dragon-drop
   - ttf-ms-fonts
   - visual-studio-code-bin
