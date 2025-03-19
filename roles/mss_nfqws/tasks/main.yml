@@ -10,15 +10,19 @@
 
 - name: set mss-nfqws state
   block:
+    - name: derive wan iface name
+      set_fact:
+        nfqws_iface: "{{ 'ppp0' if ppp_wan else 'wan' }}"
+
     - name: enabled by default, if not in a vm
       systemd_service:
-        name: mss-nfqws
+        name: "mss-nfqws@{{ nfqws_iface }}.service"
         enabled: true
       when: in_vm
 
     - name: triggers, when on baremetal
       systemd_service:
-        name: mss-nfqws
+        name: "mss-nfqws@{{ nfqws_iface }}.service"
         state:
           "{{ \
             'restarted' if \
