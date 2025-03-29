@@ -1,12 +1,9 @@
 ---
-- name: bulk enable extra services
+- name: enable gpm
   systemd_service:
-    name: "{{ item }}"
+    name: gpm
     state: started
     enabled: true
-  with_items:
-    - gpm
-    - vnstat
 
 - name: enable but do not start module cleanup
   systemd_service:
