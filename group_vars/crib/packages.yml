@@ -69,7 +69,6 @@ main_pkgs_base:
   - unzip
   - vifm
   - vim
-  - vnstat
   - wavemon
   - wget
   - whois
