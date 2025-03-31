@@ -1,10 +1,7 @@
 ---
 mss_hostname: gat
-
-mss_fstab_extra: |
-  /dev/sda1 /boot vfat defaults 0 0
-
 mss_consolefont: ter-v24n
+mss_fstab_extra:
 
 mss_wireguard_ifaces:
   - lichen
