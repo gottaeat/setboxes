@@ -1,5 +1,0 @@
----
-- name: blacklist ipv6
-  community.general.kernel_blacklist:
-    name: ipv6
-    state: present

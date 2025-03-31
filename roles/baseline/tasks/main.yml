@@ -55,6 +55,7 @@
           /dev/arch/stuff /mnt/mss/stuff ext4 rw,relatime,noatime,data=ordered 0 2
           /mnt/mss/stuff/techy-bits/home /home/mss auto defaults,nofail,nobootwait,bind 0 0
           /mnt/mss/stuff/techy-bits/swapfile none swap sw 0 0
+          /dev/sda1 /boot vfat defaults 0 0
           {{ mss_fstab_extra }}
         dest: "/etc/fstab"
         owner: root
@@ -102,9 +103,26 @@
     - { name: "net.ipv6.conf.all.disable_ipv6", value: 1 }
     - { name: "net.ipv6.conf.default.disable_ipv6", value: 1 }
 
+- name: blacklist ipv6
+  community.general.kernel_blacklist:
+    name: ipv6
+    state: present
+
 - name: enable sysrq
   ansible.posix.sysctl:
     name: kernel.sysrq
     value: '1'
     sysctl_file: /usr/lib/sysctl.d/50-default.conf
     reload: false
+
+- name: copy over logind config
+  copy:
+    src: logind.conf
+    dest: /etc/systemd
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart logind
+
+- name: trigger handlers
+  meta: flush_handlers
