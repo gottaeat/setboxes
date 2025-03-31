@@ -81,16 +81,8 @@ class PkgDiff:
         self.ansible_inventory = None
         self.ansible_hosts = None
 
-        self.main_pkgs_base = None
-        self.main_pkgs_multimedia = None
-        self.main_pkgs_desktop_extra = None
-        self.main_pkgs_router = None
-        self.main_pkgs_bios = None
-        self.main_pkgs_wlan_tools = None
-
-        self.user_pkgs_base = None
-        self.user_pkgs_multimedia = None
-
+        self.main_pkgs = None
+        self.user_pkgs = None
         self.main_pkgs_extra = None
         self.user_pkgs_extra = None
 
@@ -139,16 +131,10 @@ class PkgDiff:
             pkgs = yaml.load(yaml_file.read(), Loader=yaml.Loader)
 
         # main
-        self.main_pkgs_base = pkgs["main_pkgs_base"]
-        self.main_pkgs_multimedia = pkgs["main_pkgs_multimedia"]
-        self.main_pkgs_desktop_extra = pkgs["main_pkgs_desktop_extra"]
-        self.main_pkgs_router = pkgs["main_pkgs_router"]
-        self.main_pkgs_bios = pkgs["main_pkgs_bios"]
-        self.main_pkgs_wlan_tools = pkgs["main_pkgs_wlan_tools"]
+        self.main_pkgs = pkgs["main_pkgs"]
 
         # user
-        self.user_pkgs_base = pkgs["user_pkgs_base"]
-        self.user_pkgs_multimedia = pkgs["user_pkgs_multimedia"]
+        self.user_pkgs = pkgs["user_pkgs"]
 
         # user requested
         with open(
@@ -163,48 +149,18 @@ class PkgDiff:
 
     def mkpkglist(self):
         # pkglist groups
-        base = [
-            self.main_pkgs_base,
-            self.user_pkgs_base,
+        pkg_groups = [
+            self.main_pkgs,
+            self.user_pkgs,
             self.main_pkgs_extra,
             self.user_pkgs_extra,
-        ]
-
-        desktop = [
-            self.main_pkgs_multimedia,
-            self.user_pkgs_multimedia,
-            self.main_pkgs_desktop_extra,
-            self.main_pkgs_wlan_tools,
-        ]
-
-        router = [
-            self.main_pkgs_router,
-        ]
-
-        bios = [
-            self.main_pkgs_bios,
         ]
 
         # base
         ansible_pkglist = []
 
-        for pkglist in base:
-            ansible_pkglist.extend(pkglist)
-
-        # desktop
-        if self.local_metaname in self.ansible_inventory["desktops"]["hosts"]:
-            for pkglist in desktop:
-                ansible_pkglist.extend(pkglist)
-
-        # router
-        if self.local_metaname in self.ansible_inventory["routers"]["hosts"]:
-            for pkglist in router:
-                ansible_pkglist.extend(pkglist)
-
-        # mbr
-        if self.local_metaname in self.ansible_inventory["bios"]["hosts"]:
-            for pkglist in bios:
-                ansible_pkglist.extend(pkglist)
+        for group in pkg_groups:
+            ansible_pkglist.extend(group)
 
         self.ansible_pkglist = sorted(set(ansible_pkglist))
 
