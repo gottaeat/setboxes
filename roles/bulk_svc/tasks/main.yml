@@ -1,18 +1,55 @@
 ---
+# gpm
 - name: enable gpm
   systemd_service:
     name: gpm
     state: started
     enabled: true
 
+# linux-modules-cleanup
 - name: enable but do not start module cleanup
   systemd_service:
     name: linux-modules-cleanup
     enabled: true
 
+# qbittorrent
 - name: enable qbittorrent
   systemd_service:
     name: qbittorrent-nox@mss.service
     state: started
     enabled: true
   when: "'qbittorrent-nox' in pkgs"
+
+# pipewire
+- name: mask pulseaudio service and socket
+  systemd_service:
+    name: "{{ item }}"
+    masked: true
+  with_items:
+    - pulseaudio.service
+    - pulseaudio.socket
+
+# ntpd
+- name: copy over ntpd config
+   copy:
+     src: ntp.conf
+     dest: /etc
+     owner: root
+     group: root
+     mode: '0644'
+   register: ntpd_copy
+ 
+ - name: set ntpd state
+   systemd_service:
+     name: ntpd
+     state: "{{ 'restarted' if ntpd_copy.changed else 'started' }}"
+     enabled: true
+
+# tor
+- name: copy over proxychains config
+   copy:
+     src: proxychains.conf
+     dest: /etc
+     owner: root
+     group: root
+     mode: '0644'
