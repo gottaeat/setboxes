@@ -1,8 +1,7 @@
 ---
 - name: copy nftables.conf to /etc
-  template:
-    src: >-
-      {{ mss_hostname + ('.nft.j2' if 'routers' in group_names else '.nft') }}
+  copy:
+    src: "{{ mss_hostname }}.nft"
     dest: /etc/nftables.conf
     owner: root
     group: root
