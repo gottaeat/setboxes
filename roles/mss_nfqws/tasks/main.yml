@@ -61,13 +61,13 @@
 
     - name: build and install project
       shell:
-        chdir: "{{ project_path }}/build_dir"
+        chdir: "{{ project_path }}/build"
         cmd: |
           meson setup ../ && ninja && ninja install
 
     - name: remove build artifacts
       file:
-        path: "{{ project_path }}/build_dir"
+        path: "{{ project_path }}/build"
         state: absent
 
     - name: update the hash
