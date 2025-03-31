@@ -2,42 +2,50 @@
 flush ruleset
 
 # physical
-define WAN_IFACE = { eth0, wlan0 }
+define WAN_IF = { eth0, wlan0 }
 
 # vpn
-define VPN_UDP_IFACE = lichen
-define VPN_TCP_IFACE = lichenraw
+define VPN_UDP_IF = lichen
+define VPN_TCP_IF = lichenraw
+
+# netns
+define DOCKER_IF = docker0
+define DOCKER_VETH1_IP = 10.0.100.1
 
 # allow ports
-define TCP_ALLOW = { 80,443,1337,1338,3131,6666,8000,9091 }
+define TCP_ALLOW = { 3131, 9091 }
 
 # groups
-define VPN_IF = { $VPN_UDP_IFACE, $VPN_TCP_IFACE }
+define NETNS_IF = { $DOCKER_IF }
+define VPN_IF = { $VPN_UDP_IF, $VPN_TCP_IF }
 
 # table
-table ip solitude {
+table ip gat {
     # FILTER<-INPUT
     chain input {
         type filter hook input priority filter; policy drop;
         iifname "lo" counter accept
         ct state established,related counter accept
+        iifname $NETNS_IF counter accept
         iifname $VPN_IF counter accept
-        iifname $WAN_IFACE tcp dport $TCP_ALLOW counter accept
-        iifname $WAN_IFACE icmp type echo-request counter accept
+        iifname $WAN_IF tcp dport $TCP_ALLOW counter accept
+        iifname $WAN_IF icmp type echo-request counter accept
     }
 
     # FILTER<-FORWARD
     chain filter_forward {
         type filter hook forward priority filter; policy drop;
         ct state established,related counter accept
+        iifname $NETNS_IF counter accept
         iifname $VPN_IF counter accept
+        iifname $WAN_IF oifname $NETNS_IF counter accept
     }
 
     # FILTER<-FORWARD (mangle)
     chain mangle_forward {
         type filter hook forward priority mangle; policy accept;
-        iifname { $WAN_IFACE, $VPN_IF } tcp flags syn tcp option maxseg size set rt mtu counter
-        oifname { $WAN_IFACE, $VPN_IF } tcp flags syn tcp option maxseg size set rt mtu counter
+        iifname { $WAN_IF, $VPN_IF } tcp flags syn tcp option maxseg size set rt mtu counter
+        oifname { $WAN_IF, $VPN_IF } tcp flags syn tcp option maxseg size set rt mtu counter
     }
 
     # FILTER<-OUTPUT
@@ -48,6 +56,7 @@ table ip solitude {
     # NAT<-POSTROUTING
     chain postrouting {
         type nat hook postrouting priority srcnat; policy accept;
+        iifname $NETNS_IF oifname { $WAN_IF, $VPN_IF } counter masquerade
     }
 
     # NAT<-PREROUTING
