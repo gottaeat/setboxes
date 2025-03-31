@@ -13,9 +13,6 @@ iterate_xmls(){
             solitude)
                 bootpfs=fat32
             ;;
-            ashtray)
-                bootpfs=ext4
-            ;;
         esac
 
         pinfo "processing ${volname}"
