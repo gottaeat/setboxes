@@ -151,6 +151,7 @@ qemu-nbd --disconnect "${NBDDEV}"
 sleep 5; partprobe; sleep 1
 
 # - - send to pool - - #
+mkdir -pv "${POOLDIR}"
 mv "${IMGNAME}" "${POOLDIR}"
 
 # - - cleanup - - #
