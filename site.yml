@@ -23,10 +23,7 @@
     # services
     - role: bind
     - role: docker
-      when: '"docker" in pkgs'
     - role: libvirt
       when: "'libvirt' in pkgs"
-    - role: thinkfan
-      when: "'thinkfan' in pkgs"
     - role: bulk_svc
     - role: cleanup
