@@ -61,7 +61,7 @@ set_volumes(){
                     bm_size=25G
                 ;;
                 solitude)
-                    bm_size=10G
+                    bm_size=15G
                 ;;
             esac
 

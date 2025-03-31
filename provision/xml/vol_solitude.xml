@@ -1,6 +1,6 @@
 <volume>
     <name>solitude.qcow2</name>
-    <capacity unit="G">11</capacity>
+    <capacity unit="G">16</capacity>
     <target>
         <path>/mnt/mss/stuff/techy-bits/pools/setboxes/solitude.qcow2</path>
         <format type="qcow2" />
