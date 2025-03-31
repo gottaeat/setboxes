@@ -43,13 +43,6 @@ call_mkinitcpio(){
     mkinitcpio -P >/dev/null 2>&1
 }
 
-call_grub(){
-    pinfo "calling grub"
-
-    grub-install --target=i386-pc /dev/sda
-    grub-mkconfig -o /boot/grub/grub.cfg
-}
-
 main(){
     . ./common
 
@@ -66,19 +59,10 @@ main(){
     print_info
     call_mkinitcpio
 
-    if [ "${EFI}" -eq 1 ]
-        then
-            call_efiboot
-            echo
-            pinfo "boot order is now:"
-            efibootmgr -u
-        else
-            cat ./misc/grub_template \
-                | sed "s|REPLACEMECMDLINE|${_CMDLINE}|g" \
-            > /etc/default/grub
-
-            call_grub
-    fi
+    call_efiboot
+    echo
+    pinfo "boot order is now:"
+    efibootmgr -u
 }
 
 main "${1}"

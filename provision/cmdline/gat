@@ -1,6 +1,4 @@
 # vim: set ft=sh:
-EFI=1
-
 _SWAPMOUNT="/mnt/mss/stuff"
 _SWAPPATH="/mnt/mss/stuff/techy-bits/swapfile"
 
