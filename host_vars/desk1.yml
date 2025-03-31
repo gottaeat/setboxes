@@ -8,15 +8,8 @@ mss_wireguard_ifaces:
 
 main_pkgs_extra:
   - amd-ucode
-  - cdrtools
   - cmake
-  - dmidecode
   - dnsmasq
-  - docker
-  - docker-buildx
-  - docker-compose
-  - efibootmgr
-  - gamescope
   - glfw
   - jdk-openjdk
   - lib32-libpulse
@@ -36,7 +29,6 @@ main_pkgs_extra:
   - qemu-desktop
   - qt5-base
   - solaar
-  - sshpass
   - steam
   - virt-manager
   - vulkan-icd-loader

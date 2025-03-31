@@ -2,6 +2,9 @@
 # mainline arch repos
 main_pkgs:
   # base
+  - cdrtools
+  - dmidecode
+  - sshpass
   - 7zip
   - ansible
   - arch-install-scripts
@@ -13,6 +16,7 @@ main_pkgs:
   - diffutils
   - dnsmasq
   - dosfstools
+  - efibootmgr
   - ethtool
   - fdupes
   - git
@@ -38,7 +42,6 @@ main_pkgs:
   - lsof
   - lvm2
   - man-db
-  - masscan
   - meson
   - mtr
   - neofetch
@@ -70,10 +73,13 @@ main_pkgs:
   - unzip
   - vifm
   - vim
-  - wavemon
   - wget
   - whois
   - wireguard-tools
+  # docker
+  - docker
+  - docker-buildx
+  - docker-compose
   # audio global
   - alsa-utils
   - pavucontrol
@@ -131,18 +137,6 @@ main_pkgs:
   - networkmanager
   - proxychains-ng
   - tor
-  # wlan
-  - aircrack-ng
-  - bettercap
-  - bully
-  - clinfo
-  - dsniff
-  - hashcat
-  - hashcat-utils
-  - hcxtools
-  - pixiewps
-  - pocl
-  - reaver
 
 # arch user repositories
 user_pkgs:

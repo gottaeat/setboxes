@@ -9,9 +9,8 @@ mss_wireguard_ifaces:
 
 main_pkgs_extra:
   - acpid
-  - efibootmgr
   - intel-ucode
   - libva-intel-driver
 
 user_pkgs_extra:
-  - thinkfan
+  - base
