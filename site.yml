@@ -2,8 +2,7 @@
 - hosts: crib
   become: true
   vars_files:
-    - "{{ vaultdir }}/setboxes/cred.yml"
-    - "{{ vaultdir }}/setboxes/router.yml"
+    - "{{ vaultdir }}/setboxes/vault.yml"
   roles:
     # core
     - role: initialize
@@ -12,36 +11,21 @@
     - role: mkinitcpio
     - role: packages
     - role: udev
-    - role: modules
     # software
     - role: vim
     # mss-wares
     - role: mss_otg
     - role: mss_nfqws
     # networking
-    - role: systemd_networkd
+    - role: networking
     - role: wireguard
-    - role: router_netns
-      when: "'routers' in group_names"
-    - role: networkmanager
-      when: "'desktops' in group_names"
-    - role: pppd
-      when: "'routers' in group_names"
-    # services
-    - role: mon_exporters
-      when: "'routers' in group_names"
-    - role: systemd_logind
     - role: nftables
+    # services
     - role: bind
     - role: docker
       when: '"docker" in pkgs'
     - role: libvirt
       when: "'libvirt' in pkgs"
-    - role: pipewire
-      when: "'desktops' in group_names"
-    - role: ntpd
-    - role: tor
-      when: "'desktops' in group_names"
     - role: thinkfan
       when: "'thinkfan' in pkgs"
     - role: bulk_svc

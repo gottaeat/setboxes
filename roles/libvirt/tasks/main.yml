@@ -118,13 +118,4 @@
           with_items:
             - gat
             - iso
-
-        - name: define domains
-          community.libvirt.virt:
-            command: define
-            autostart: false
-            xml: '{{ lookup("file", item) }}'
-          with_items:
-            - virtxml/dom_win10-ltsc-21h2.xml
-          changed_when: false
       when: not in_vm

@@ -10,7 +10,7 @@ except:
 
 
 class GenInventory:
-    _BOXES = ["gat", "solitude", "ashtray"]
+    _BOXES = ["gat", "solitude"]
 
     def __init__(self):
         self.conn = None
@@ -61,17 +61,9 @@ class GenInventory:
                         "ansible_host": "192.168.199.3" if self.in_vm else "solitude",
                         "in_vm": self.in_vm,
                     },
-                    "t61": {
-                        "ansible_host": "192.168.199.4" if self.in_vm else "ashtray",
-                        "in_vm": self.in_vm,
-                        "ppp_wan": False,
-                    },
                 }
             },
-            "crib": {"hosts": ["desk1", "x230", "t61"]},
-            "desktops": {"hosts": ["desk1", "x230"]},
-            "routers": {"hosts": ["t61"]},
-            "bios": {"hosts": ["t61"]},
+            "crib": {"hosts": ["desk1", "x230"]},
         }
 
         print(json.dumps(inventory_json, indent=4))

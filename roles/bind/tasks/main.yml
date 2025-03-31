@@ -76,7 +76,7 @@
 - name: set /etc/resolv.conf
   copy:
     content: |
-      search crib guest lichen lichenraw
+      search crib lichen lichenraw
       nameserver 10.0.99.0
     dest: "/etc/resolv.conf"
     owner: root

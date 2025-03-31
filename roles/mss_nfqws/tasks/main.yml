@@ -1,35 +1,88 @@
 ---
-- name: build mss-nfqws
-  include_role:
-    name: handle_meson
-  vars:
-    project_url: "https://github.com/gottaeat/mss-nfqws"
-    project_name: "mss-nfqws"
-    baremetal_path: "/mnt/mss/stuff/techy-bits/git/mss-nfqws"
-    build_dir: "build"
+# 1. check if vm init was done
+- name: check if vm init was done
+  stat:
+    path: /var/lib/mss_ansible/mss-nfqws_vm_init
+  register: vm_init
 
-- name: set mss-nfqws state
+# 2. we are in the vm, clone the repo
+- name: vm pre-install
   block:
-    - name: derive wan iface name
+    - name: set project path
       set_fact:
-        nfqws_iface: "{{ 'ppp0' if ppp_wan else 'wan' }}"
+        project_path: /tmp/mss-nfqws
 
-    - name: enabled by default, if not in a vm
-      systemd_service:
-        name: "mss-nfqws@{{ nfqws_iface }}.service"
-        enabled: true
-      when: in_vm
+    - name: clone project
+      git:
+        repo: https://github.com/gottaeat/mss-nfqws
+        dest: "{{ project_path }}"
+        depth: 1
+        recursive: true
+  when: in_vm and not vm_init.stat.exists
 
-    - name: triggers, when on baremetal
-      systemd_service:
-        name: "mss-nfqws@{{ nfqws_iface }}.service"
-        state:
-          "{{ \
-            'restarted' if \
-              mss_nfqws_changed is defined \
-            else \
-              'started' \
-          }}"
-        enabled: true
-      when: not in_vm
-  when: "'routers' in group_names"
+# 3. we are on baremetal
+- name: baremetal pre-install
+  block:
+    - name: set nfqws-path
+      set_fact:
+        project_path: /mnt/mss/stuff/techy-bits/git/mss-nfqws
+
+    - name: read the hash of the installed nfqws
+      block:
+        - name: slurp the project commit file
+          slurp:
+            src: /var/lib/mss_ansible/mss-nfqws_commit
+          register: commit_hash_b64
+
+        - name: decode the hash
+          set_fact:
+            installed_hash: "{{ commit_hash_b64['content'] | b64decode }}"
+  when: not in_vm
+
+# 4. read the HEAD commit hash
+- name: read the hash of the head
+  shell:
+    chdir: "{{ project_path }}"
+    cmd: |
+       git rev-parse --short HEAD
+  register: head_hash
+  changed_when: false
+  when: not in_vm or not vm_init.stat.exists
+
+# 5. install when:
+#  a. we are in the vm and we never installed mss-nfqws
+#  b. we are on baremetal and the installed hash does not match the HEAD
+- name: build project
+  block:
+    - name: create build directory
+      file:
+        path: "{{ project_path }}/build"
+        state: directory
+
+    - name: build and install project
+      shell:
+        chdir: "{{ project_path }}/build_dir"
+        cmd: |
+          meson setup ../ && ninja && ninja install
+
+    - name: remove build artifacts
+      file:
+        path: "{{ project_path }}/build_dir"
+        state: absent
+
+    - name: update the hash
+      copy:
+        content: "{{ head_hash }}"
+        dest: /var/lib/mss_ansible/mss-nfqws_commit
+
+    - name: set vm_init
+      file:
+        path: /var/lib/mss_ansible/mss-nfqws_vm_init
+        state: touch
+        modification_time: preserve
+        access_time: preserve
+      when: not vm_init.stat.exists
+
+  when: >-
+    ( in_vm and not vm_init.stat.exists ) or
+    ( not in_vm and installed_hash.stdout != head_hash.stdout )

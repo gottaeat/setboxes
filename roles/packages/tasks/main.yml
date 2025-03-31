@@ -1,22 +1,4 @@
 ---
-- name: resolve package list
-  block:
-    - name: handle desktops group
-      set_fact:
-        pkgs: "{{ (pkgs + desktop_pkgs ) }}"
-      when: "'desktops' in group_names"
-
-
-    - name: handle routers group
-      set_fact:
-        pkgs: "{{ (pkgs + main_pkgs_router) }}"
-      when: "'routers' in group_names"
-
-    - name: handle bios group
-      set_fact:
-        pkgs: "{{ (pkgs + main_pkgs_bios)}}"
-      when: "'bios' in group_names"
-
 - name: create aur user
   user:
     name: aur
@@ -105,7 +87,6 @@
       with_items:
         - EFI
         - grub
-  when: "'bios' not in group_names"
 
 - name: handle groups
   block:
@@ -114,14 +95,12 @@
         name: mss
         groups: adbusers
         append: true
-      when: '"android-tools" in pkgs'
 
     - name: add user mss to group wireshark
       user:
         name: mss
         groups: wireshark
         append: true
-      when: '"wireshark-qt" in pkgs'
 
 - name: trigger handlers
   meta: flush_handlers

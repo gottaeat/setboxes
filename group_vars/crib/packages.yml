@@ -1,6 +1,7 @@
 ---
 # mainline arch repos
-main_pkgs_base:
+main_pkgs:
+  # base
   - 7zip
   - ansible
   - arch-install-scripts
@@ -73,8 +74,6 @@ main_pkgs_base:
   - wget
   - whois
   - wireguard-tools
-
-main_pkgs_multimedia:
   # audio global
   - alsa-utils
   - pavucontrol
@@ -127,21 +126,12 @@ main_pkgs_multimedia:
   - noto-fonts
   - noto-fonts-cjk
   - noto-fonts-emoji
-
-main_pkgs_desktop_extra:
+  # extra
   - android-tools
   - networkmanager
   - proxychains-ng
   - tor
-
-main_pkgs_router:
-  - ppp
-  - prometheus-node-exporter
-
-main_pkgs_bios:
-  - grub
-
-main_pkgs_wlan_tools:
+  # wlan
   - aircrack-ng
   - bettercap
   - bully
@@ -155,12 +145,10 @@ main_pkgs_wlan_tools:
   - reaver
 
 # arch user repositories
-user_pkgs_base:
-  - fbcat
-  - ookla-speedtest-bin
-
-user_pkgs_multimedia:
+user_pkgs:
   - brave-bin
   - dragon-drop
+  - fbcat
+  - ookla-speedtest-bin
   - ttf-ms-fonts
   - visual-studio-code-bin
