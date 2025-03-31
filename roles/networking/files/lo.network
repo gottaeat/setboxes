@@ -4,4 +4,3 @@ Name=lo
 [Network]
 Address=127.0.0.1/8
 Address=10.0.99.0/32
-

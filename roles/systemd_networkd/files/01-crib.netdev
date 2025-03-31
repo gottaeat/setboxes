@@ -1,6 +1,0 @@
-[NetDev]
-Name=crib
-Kind=vlan
-
-[VLAN]
-Id=1

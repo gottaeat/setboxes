@@ -1,0 +1,53 @@
+---
+- name: get rid of bootstrap networking
+  file:
+    path: "/etc/systemd/network/80-dhcp.network"
+    state: absent
+
+- name: configure lo network
+  copy:
+    src: lo.network
+    dest: "/etc/systemd/network/lo.network"
+    owner: root
+    group: root
+    mode: '0644'
+  register: lo_net_copy
+
+- name: copy over networkmanager configuration
+  copy:
+    src: conf.d/
+    dest: /etc/NetworkManager/conf.d/
+    owner: root
+    group: root
+    mode: '0644'
+  register: nm_config_copy
+
+- name: set systemd-networkd state
+  block:
+    - name: enabled by default, if not in a vm
+      systemd_service:
+        name: systemd-networkd
+        enabled: true
+      when: in_vm
+
+    - name: triggers, when on baremetal
+      systemd_service:
+        name: systemd-networkd
+        state: "{{ 'restarted' if lo_net_copy.changed else 'started' }}"
+        enabled: true
+      when: not in_vm
+
+- name: set networkmanager state
+  block:
+    - name: enabled by default, if not in a vm
+      systemd_service:
+        name: NetworkManager
+        enabled: true
+      when: in_vm
+
+    - name: triggers, when on baremetal
+      systemd_service:
+        name: NetworkManager
+        state: "{{ 'reloaded' if nm_config_copy.changed else 'started' }}"
+        enabled: true
+      when: not in_vm
