@@ -1,44 +1,15 @@
 ---
-- name: copy over systemd overrides
-  copy:
-    src: named.service.d
-    dest: /etc/systemd/system
-    owner: root
-    group: root
-    mode: '0640'
-  register: named_systemd_override
-
-- name: daemon reload
-  systemd_service:
-    daemon_reload: true
-  when: named_systemd_override.changed
-
 - name: base named configuration
-  template:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
+  copy:
+    src: "{{ item }}"
+    dest: /etc
     owner: named
     group: named
     mode: '0640'
   with_items:
-    - { src: named.conf.j2, dest: /etc/named.conf }
-    - { src: rndc.conf, dest: /etc/rndc.conf }
-  register: base_named_copy
-
-- name: zonefiles
-  ansible.posix.synchronize:
-    src: named
-    dest: /var
-    archive: true
-    delete: true
-    owner: false
-    group: false
-    times: false
-    checksum: true
-    rsync_opts:
-      - "--chown=named:named"
-      - "--chmod=D750,F640"
-  register: zone_named_copy
+    - named.conf
+    - rndc.conf
+  register: named_conf_copy
 
 - name: generate /etc/rndc.key
   command:
@@ -62,21 +33,13 @@
     - name: triggers
       systemd_service:
         name: named
-        state:
-          "{{ \
-            'restarted' if \
-              named_systemd_override.changed or \
-              base_named_copy.changed or \
-              zone_named_copy.changed \
-            else \
-              'started' \
-          }}"
+        state: "{{ 'restarted' if named_conf_copy.changed else 'started' }}"
         enabled: true
 
 - name: set /etc/resolv.conf
   copy:
     content: |
-      search crib lichen lichenraw
+      search crib lichen
       nameserver 10.0.99.0
     dest: "/etc/resolv.conf"
     owner: root
