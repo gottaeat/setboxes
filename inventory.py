@@ -53,17 +53,17 @@ class GenInventory:
         inventory_json = {
             "_meta": {
                 "hostvars": {
-                    "desk1": {
+                    "gat": {
                         "ansible_host": "192.168.199.2" if self.in_vm else "gat",
                         "in_vm": self.in_vm,
                     },
-                    "x230": {
+                    "solitude": {
                         "ansible_host": "192.168.199.3" if self.in_vm else "solitude",
                         "in_vm": self.in_vm,
                     },
                 }
             },
-            "crib": {"hosts": ["desk1", "x230"]},
+            "crib": {"hosts": ["gat", "solitude"]},
         }
 
         print(json.dumps(inventory_json, indent=4))
