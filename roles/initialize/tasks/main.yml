@@ -63,6 +63,18 @@
 
 - name: configure sshd
   block:
+    - name: install ssh banner
+      copy:
+        content: |
+          ┉┉┉┉┉
+          ┊┊┊┊┊ {{ mss_hostname }}
+          ┉┉┉┉┉
+        dest: /etc/ssh/banner
+        owner: root
+        group: root
+        mode: '0644'
+      notify: restart sshd
+
     - name: copy sshd configuration
       copy:
         src: sshd_config
@@ -71,14 +83,6 @@
         group: root
         mode: '0644'
       notify: restart sshd
-
-    - name: copy banner
-      copy:
-        src: "banners/{{ mss_hostname }}"
-        dest: /etc/ssh/banner
-        owner: root
-        group: root
-        mode: '0644'
 
 - name: create the stat dir in /var/lib
   file:
