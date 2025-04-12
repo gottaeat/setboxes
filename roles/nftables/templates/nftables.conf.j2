@@ -4,7 +4,7 @@ flush ruleset
 # base
 define WAN_IF = { eth0, wlan0 }
 define SSH_PORT = 3131
-define VPN_IF = { {% for iface in mss_wireguard_ifaces %}{{ iface }}{% if not loop.last %}, {% endif %}{% endfor %} }
+define VPN_IF = { {% for iface in wireguard_ifaces %}{{ iface }}{% if not loop.last %}, {% endif %}{% endfor %} }
 
 # docker
 define DOCKER_IF = docker0

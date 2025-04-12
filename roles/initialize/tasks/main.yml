@@ -67,7 +67,7 @@
       copy:
         content: |
           ┉┉┉┉┉
-          ┊┊┊┊┊ {{ mss_hostname }}
+          ┊┊┊┊┊ {{ inventory_hostname }}
           ┉┉┉┉┉
         dest: /etc/ssh/banner
         owner: root

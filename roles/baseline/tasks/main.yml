@@ -1,14 +1,14 @@
 ---
 - name: set hostname
   hostname:
-    name: "{{ mss_hostname }}"
+    name: "{{ inventory_hostname }}"
     use: systemd
 
 - name: set /etc/hosts
   copy:
     content: |
       127.0.0.1 localhost.localdomain localhost
-      127.0.1.1 {{ mss_hostname }} {{ mss_hostname }}
+      127.0.1.1 {{ inventory_hostname }} {{ inventory_hostname }}
     dest: "/etc/hosts"
     owner: root
     group: root
@@ -56,7 +56,7 @@
           /mnt/mss/stuff/techy-bits/home /home/mss auto defaults,nofail,nobootwait,bind 0 0
           /mnt/mss/stuff/techy-bits/swapfile none swap sw 0 0
           /dev/sda1 /boot vfat defaults 0 0
-          {{ mss_fstab_extra }}
+          {{ fstab_extra }}
         dest: "/etc/fstab"
         owner: root
         group: root
