@@ -1,36 +1,25 @@
 #!/usr/bin/nft -f
 flush ruleset
 
-# physical
+# base
 define WAN_IF = { eth0, wlan0 }
+define SSH_PORT = 3131
+define VPN_IF = { {% for iface in mss_wireguard_ifaces %}{{ iface }}{% if not loop.last %}, {% endif %}{% endfor %} }
 
-# vpn
-define VPN_UDP_IF = lichen
-
-# netns
+# docker
 define DOCKER_IF = docker0
 define DOCKER_VETH1_IP = 10.0.100.1
 
-define LIBVIRTD_IF = libvirtd0
-define LIBVIRTD_VETH1_IP = 10.0.101.1
-
-# allow ports
-define TCP_ALLOW = { 3131, 9091 }
-
-# groups
-define NETNS_IF = { $DOCKER_IF, $LIBVIRTD_IF }
-define VPN_IF = { $VPN_UDP_IF }
-
 # table
-table ip gat {
+table ip fw {
     # FILTER<-INPUT
     chain input {
         type filter hook input priority filter; policy drop;
         iifname "lo" counter accept
         ct state established,related counter accept
-        iifname $NETNS_IF counter accept
+        iifname $DOCKER_IF counter accept
         iifname $VPN_IF counter accept
-        iifname $WAN_IF tcp dport $TCP_ALLOW counter accept
+        iifname $WAN_IF tcp dport $SSH_PORT counter accept
         iifname $WAN_IF icmp type echo-request counter accept
     }
 
@@ -38,9 +27,9 @@ table ip gat {
     chain filter_forward {
         type filter hook forward priority filter; policy drop;
         ct state established,related counter accept
-        iifname $NETNS_IF counter accept
+        iifname $DOCKER_IF counter accept
         iifname $VPN_IF counter accept
-        iifname $WAN_IF oifname $NETNS_IF counter accept
+        iifname $WAN_IF oifname $DOCKER_IF counter accept
     }
 
     # FILTER<-FORWARD (mangle)
@@ -58,7 +47,7 @@ table ip gat {
     # NAT<-POSTROUTING
     chain postrouting {
         type nat hook postrouting priority srcnat; policy accept;
-        iifname $NETNS_IF oifname { $WAN_IF, $VPN_IF } counter masquerade
+        iifname $DOCKER_IF oifname { $WAN_IF, $VPN_IF } counter masquerade
     }
 
     # NAT<-PREROUTING
@@ -66,3 +55,16 @@ table ip gat {
         type nat hook prerouting priority dstnat; policy accept;
     }
 }
+
+{% if "libvirt" in pkgs %}
+define LIBVIRTD_IF = libvirtd0
+define LIBVIRTD_VETH1_IP = 10.0.101.1
+add rule ip fw input iifname $LIBVIRTD_IF counter accept
+add rule ip fw filter_forward iifname $LIBVIRTD_IF counter accept
+add rule ip fw filter_forward iifname $WAN_IF oifname $LIBVIRTD_IF counter accept
+add rule ip fw postrouting iifname $LIBVIRTD_IF oifname { $WAN_IF, $VPN_IF } counter masquerade
+{% endif %}
+
+{% if "qbittorrent-nox" in pkgs %}
+add rule ip fw input iifname $WAN_IF tcp dport 9091 counter accept
+{% endif %}

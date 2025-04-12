@@ -1,7 +1,7 @@
 ---
 - name: copy nftables.conf to /etc
-  copy:
-    src: "{{ mss_hostname }}.nft"
+  template:
+    src: nftables.conf.j2
     dest: /etc/nftables.conf
     owner: root
     group: root
