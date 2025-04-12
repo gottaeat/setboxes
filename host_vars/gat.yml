@@ -1,9 +1,7 @@
 ---
-mss_hostname: gat
-mss_consolefont: ter-v24n
-mss_fstab_extra:
-
-mss_wireguard_ifaces:
+consolefont: ter-v24n
+fstab_extra: ''
+wireguard_ifaces:
   - lichen
 
 main_pkgs_extra:
@@ -37,5 +35,4 @@ main_pkgs_extra:
   - wine-mono
   - winetricks
 
-user_pkgs_extra:
-  - base
+user_pkgs_extra: []

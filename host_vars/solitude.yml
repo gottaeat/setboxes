@@ -1,0 +1,13 @@
+---
+consolefont: ter-v14n
+fstab_extra: ''
+wireguard_ifaces:
+  - lichen
+  - lichenraw
+
+main_pkgs_extra:
+  - acpid
+  - intel-ucode
+  - libva-intel-driver
+
+user_pkgs_extra: []
