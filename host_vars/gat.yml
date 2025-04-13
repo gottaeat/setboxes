@@ -6,6 +6,9 @@ wireguard_ifaces:
 
 main_pkgs_extra:
   - amd-ucode
+  - bluetui
+  - bluez
+  - bluez-utils
   - cmake
   - dnsmasq
   - glfw
