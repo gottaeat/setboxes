@@ -111,7 +111,6 @@ main_pkgs:
   - gimp
   - libreoffice-fresh
   - mpv
-  - signal-desktop
   - thunderbird
   - torbrowser-launcher
   - wireshark-qt
