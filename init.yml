@@ -1,5 +1,5 @@
 ---
-- hosts: crib
+- hosts: all
   vars:
     ansible_user: root
     ansible_password: loggedin
