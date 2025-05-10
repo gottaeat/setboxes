@@ -45,30 +45,16 @@
         )
 
 - name: set libvirt state
-  block:
-    # set to never change because this kicks off other components and
-    # goes inactive, we care for failure, not change in this case.
-    - name: set libvirtd
-      systemd_service:
-        name: libvirtd
-        state: started
-        enabled: true
-      changed_when: false
+  systemd_service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  with_items:
+    - libvirtd
+    - virtlogd
+  changed_when: false
 
-    - name: set virtlogd
-      systemd_service:
-        name: virtlogd
-        state: started
-        enabled: false
-      changed_when: false
-
-- name: add user mss to group libvirt
-  user:
-    name: mss
-    groups: libvirt
-    append: true
-
-- name: set up boxes
+- name: register config
   block:
     - name: define networks
       community.libvirt.virt_net:
@@ -76,7 +62,7 @@
         name: "{{ item.name }}"
         xml: '{{ lookup("file", item.xml) }}'
       with_items:
-        - { name: "gat", xml: "virtxml/net_gat.xml" }
+        - { name: "virt", xml: "virtxml/net_virt.xml" }
 
     - name: define pools
       community.libvirt.virt_pool:
@@ -84,7 +70,7 @@
         name: "{{ item.name }}"
         xml: '{{ lookup("file", item.xml) }}'
       with_items:
-        - { name: "gat", xml: "virtxml/pool_gat.xml" }
+        - { name: "virt", xml: "virtxml/pool_virt.xml" }
         - { name: "iso", xml: "virtxml/pool_iso.xml" }
 
     - name: set status
@@ -92,23 +78,19 @@
         - name: activate networks
           community.libvirt.virt_net:
             state: active
-            name: "{{ item }}"
-          with_items:
-            - gat
+            name: virt
 
         - name: autostart networks
           community.libvirt.virt_net:
             autostart: true
-            name: "{{ item }}"
-          with_items:
-            - gat
+            name: virt
 
         - name: activate pools
           community.libvirt.virt_pool:
             state: active
             name: "{{ item }}"
           with_items:
-            - gat
+            - virt
             - iso
 
         - name: autostart networks
@@ -116,6 +98,6 @@
             autostart: true
             name: "{{ item }}"
           with_items:
-            - gat
+            - virt
             - iso
       when: not in_vm
