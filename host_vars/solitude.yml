@@ -1,13 +1,17 @@
 ---
 consolefont: ter-v14n
 fstab_extra: ''
+resolv_extra: 'search crib lichen'
 wireguard_ifaces:
   - lichen
-  - lichenraw
 
 main_pkgs_extra:
-  - acpid
+  - dnsmasq
   - intel-ucode
   - libva-intel-driver
+  - libvirt
+  - qemu-desktop
+  - solaar
+  - virt-manager
 
 user_pkgs_extra: []
