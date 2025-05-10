@@ -126,7 +126,7 @@ class PkgDiff:
 
         # - - packages - - #
         with open(
-            f"{self._REPODIR}/group_vars/crib/packages.yml", "r", encoding="utf-8"
+            f"{self._REPODIR}/group_vars/all/packages.yml", "r", encoding="utf-8"
         ) as yaml_file:
             pkgs = yaml.load(yaml_file.read(), Loader=yaml.Loader)
 

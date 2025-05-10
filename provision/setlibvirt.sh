@@ -52,16 +52,12 @@ set_volumes(){
     for volume in ./xml/vol_*.xml; do
         volname="$(echo "${volume}" | sed 's/\.\/xml\/vol_//g;s/\.xml$//g')"
 
-        # gat
         if ! echo "${volinfo}" | grep "${volname}" >/dev/null 2>&1; then
             virsh vol-create --pool "${ORG_NAME}" --file "${volume}"
 
             case "${volname}" in
-                gat)
-                    bm_size=25G
-                ;;
                 solitude)
-                    bm_size=15G
+                    bm_size=25G
                 ;;
             esac
 

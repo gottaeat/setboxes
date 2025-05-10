@@ -7,9 +7,6 @@ iterate_xmls(){
         path_to_vol="$(virsh vol-key --pool setboxes --vol ${volname}.qcow2)"
 
         case "${volname}" in
-            gat)
-                bootpfs=fat32
-            ;;
             solitude)
                 bootpfs=fat32
             ;;
