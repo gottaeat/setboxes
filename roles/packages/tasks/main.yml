@@ -102,5 +102,12 @@
         groups: wireshark
         append: true
 
+    - name: add user mss to group libvirt
+      user:
+        name: mss
+        groups: libvirt
+        append: true
+      when: '"libvirt" in pkgs'
+
 - name: trigger handlers
   meta: flush_handlers
