@@ -1,0 +1,6 @@
+<pool type="dir">
+    <name>virt</name>
+    <target>
+        <path>/mnt/mss/stuff/techy-bits/pools/virt</path>
+    </target>
+</pool>
