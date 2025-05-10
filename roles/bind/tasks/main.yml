@@ -1,4 +1,28 @@
 ---
+- name: configure stubby
+  block:
+    - name: copy stubby configuration
+      copy:
+        src: stubby.yml
+        dest: /etc/stubby
+        owner: root
+        group: root
+        mode: '0640'
+      register: stubby_conf_copy
+
+    - name: set stubby state
+      block:
+        - name: enabled by default
+          systemd_service:
+            name: stubby
+            enabled: true
+
+        - name: triggers
+          systemd_service:
+            name: stubby
+            state: "{{ 'restarted' if stubby_conf_copy.changed else 'started' }}"
+            enabled: true
+
 - name: base named configuration
   copy:
     src: "{{ item }}"
@@ -11,17 +35,19 @@
     - rndc.conf
   register: named_conf_copy
 
-- name: generate /etc/rndc.key
-  command:
-    cmd: rndc-confgen -a -c /etc/rndc.key
-    creates: /etc/rndc.key
+- name: configure rndc
+  block:
+    - name: generate /etc/rndc.key
+      command:
+        cmd: rndc-confgen -a -c /etc/rndc.key
+        creates: /etc/rndc.key
 
-- name: set perms for rndc.key
-  file:
-    path: /etc/rndc.key
-    owner: root
-    group: named
-    mode: '0644'
+    - name: set perms for rndc.key
+      file:
+        path: /etc/rndc.key
+        owner: root
+        group: named
+        mode: '0644'
 
 - name: set named state
   block:
@@ -39,7 +65,7 @@
 - name: set /etc/resolv.conf
   copy:
     content: |
-      search crib lichen
+      {{ resolv_extra }}
       nameserver 10.0.99.0
     dest: "/etc/resolv.conf"
     owner: root
