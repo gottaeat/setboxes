@@ -1,7 +1,7 @@
 ---
 - name: create client symlinks for {{ inventory_hostname }}
   file:
-    src: "/mnt/mss/stuff/techy-bits/vpn/lichen/client/{{ inventory_hostname }}-{{ item }}.conf"
+    src: "/mnt/mss/stuff/techy-bits/git/vault/genwg_dump/client/{{ inventory_hostname }}-{{ item }}.conf"
     dest: "/etc/wireguard/{{ item }}.conf"
     state: link
     force: true
