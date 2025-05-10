@@ -2,9 +2,6 @@
 # mainline arch repos
 main_pkgs:
   # base
-  - cdrtools
-  - dmidecode
-  - sshpass
   - 7zip
   - ansible
   - arch-install-scripts
@@ -13,7 +10,9 @@ main_pkgs:
   - bc
   - bind
   - binwalk
+  - cdrtools
   - diffutils
+  - dmidecode
   - dnsmasq
   - dosfstools
   - efibootmgr
@@ -28,7 +27,6 @@ main_pkgs:
   - inetutils
   - iperf3
   - iptables-nft
-  - irssi
   - iw
   - jq
   - kernel-modules-hook
@@ -39,6 +37,7 @@ main_pkgs:
   - links
   - linux-firmware
   - linux-zen
+  - linux-zen-headers
   - lsof
   - lvm2
   - man-db
@@ -50,7 +49,6 @@ main_pkgs:
   - nmap
   - ntp
   - openssh
-  - openvpn
   - pacman-contrib
   - partclone
   - patchelf
@@ -64,7 +62,9 @@ main_pkgs:
   - samurai
   - smartmontools
   - sshfs
+  - sshpass
   - strace
+  - stubby
   - tcpdump
   - terminus-font
   - tmux
